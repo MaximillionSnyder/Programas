@@ -19,6 +19,120 @@ misma key qué piezas viajan entre ambos estados.
 
 Toca cada card para alternarla.
 
+---
+
+## ⚠️ Modo auto-demo — usar SIEMPRE para verificar en dispositivo
+
+> **Esto es lo que hay que recordar.** Para grabar o verificar la animación desde una PC
+> o desde Termux, **hay que lanzar la app con el extra `auto`**. Sin él no se puede
+> automatizar nada.
+
+```bash
+adb shell am force-stop com.example.morphdemo
+adb shell am start -n com.example.morphdemo/.MainActivity --ez auto true
+```
+
+Con `auto = true` las dos cards **se alternan solas cada 2000 ms**, así que la animación
+corre sin que nadie toque la pantalla. Las dos van sincronizadas, de modo que cada
+fotograma muestra ambas técnicas en la misma fase y se pueden comparar lado a lado.
+
+Sin el extra, la app funciona normal: se alternan solo al tocarlas.
+
+### ¿Por qué hace falta?
+
+Porque **HyperOS (Xiaomi) bloquea inyectar eventos de entrada desde adb**:
+
+```
+adb shell input tap 450 730
+java.lang.SecurityException: Injecting input events requires the caller
+to have the INJECT_EVENTS permission.
+```
+
+Lo mismo pasa con `input keyevent` y con `monkey`. Sin poder tocar la pantalla por adb,
+la única forma de automatizar una grabación es que la propia app se accione sola. De ahí
+el extra.
+
+En un dispositivo sin esa restricción bastaría con `adb shell input tap`, y el modo
+auto-demo sería innecesario.
+
+### Cómo se implementa
+
+`MainActivity` lee el extra y lo pasa a las dos cards; cada card lo acepta como
+parámetro opcional y, si viene, arranca un bucle:
+
+```kotlin
+val auto = intent.getBooleanExtra("auto", false)
+// ...
+RectMorphCard(..., autoToggleMs = if (auto) 2000L else null)
+
+// dentro de cada card:
+if (autoToggleMs != null) {
+    LaunchedEffect(autoToggleMs) {
+        while (true) {
+            delay(autoToggleMs)
+            showChart = !showChart
+        }
+    }
+}
+```
+
+Es un parámetro con valor por defecto `null`, así que **no cambia el comportamiento
+normal** de la app.
+
+---
+
+## Verificación en dispositivo
+
+Verificado en un **POCO X6 Pro 5G** (Android 17, 1220x2712, densidad 480) con la app
+instalada por adb. Los artefactos están en [`docs/verificacion/`](docs/verificacion/).
+
+### El requisito central: la card no cambia de tamaño
+
+Medido sobre **207 fotogramas** de la grabación:
+
+| | Alto de la card | Variación |
+| --- | --- | --- |
+| Card 1 | 590 – 592 px | 2 px |
+| Card 2 | 590 – 592 px | 2 px |
+
+Los 2 px son antialiasing en las esquinas redondeadas. **El contenedor no se mueve.**
+
+### Duración real del morph
+
+Medido muestreando el píxel de la barra más alta fotograma a fotograma:
+
+| | info → gráfica | gráfica → info |
+| --- | --- | --- |
+| **Card 1** (cuadrados) | 467 / 525 / 467 ms | 409 / 409 / 409 ms |
+| **Card 2** (SharedTransition) | 292 / 467 / 467 ms | **175 / 233 / 233 ms** |
+
+**Hallazgo:** la Card 2 va casi el doble de rápido al volver, y es asimétrica (~467 ms
+para ir a la gráfica, ~200 ms para regresar). La Card 1 es simétrica y pausada. Es el
+*spring* por defecto de `sharedElement`, que nadie configuró. Para igualarlas hay que
+darle a la Card 2 un `boundsTransform` explícito con un `tween`.
+
+> **Límite de la medición:** el video es de ~17 fps, así que hay ±58 ms de incertidumbre.
+> Sirve para comparar las dos cards entre sí, no para certificar milisegundos exactos.
+
+### Artefactos
+
+| Archivo | Qué es |
+| --- | --- |
+| `hi1_morph.png` | Card 1 a 30 fps: el morph completo, del estado info a la gráfica |
+| `hi2_morph.png` | Card 2 a 30 fps: el mismo morph, visiblemente más rápido |
+| `montage_coarse.png` | Rejilla de 12 s a 1 fps: alternancia completa de ambas cards |
+| `demo2.mp4` | Grabación original de la app corriendo (12 s) |
+
+Para reproducir la grabación:
+
+```bash
+adb shell screenrecord --time-limit 12 /sdcard/demo.mp4
+adb pull /sdcard/demo.mp4
+ffmpeg -i demo.mp4 -vf "crop=1220:670:0:630,fps=30,scale=420:-1,tile=7x3" -frames:v 1 card1.png
+```
+
+---
+
 ## Detalle técnico
 
 La comparación completa (tabla de decisión, fragmentos clave, cómo llevarlo a una app

@@ -29,16 +29,19 @@ import com.example.morphdemo.theme.MorphDemoTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Modo auto-demo, se activa con:  am start ... --ez auto true
+        // Hace falta porque HyperOS bloquea inyectar eventos de entrada desde adb.
+        val auto = intent.getBooleanExtra("auto", false)
         setContent {
             MorphDemoTheme {
-                Screen()
+                Screen(auto)
             }
         }
     }
 }
 
 @Composable
-private fun Screen() {
+private fun Screen(auto: Boolean = false) {
     val onBackground = MaterialTheme.colorScheme.onBackground
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -76,6 +79,7 @@ private fun Screen() {
             amount = SampleData.AMOUNT,
             subtitle = SampleData.SUBTITLE,
             categories = SampleData.categories,
+            autoToggleMs = if (auto) 2000L else null,
         )
 
         Spacer(Modifier.height(32.dp))
@@ -91,6 +95,7 @@ private fun Screen() {
             amount = SampleData.AMOUNT,
             subtitle = SampleData.SUBTITLE,
             categories = SampleData.categories,
+            autoToggleMs = if (auto) 2000L else null,
         )
 
         Spacer(Modifier.height(28.dp))

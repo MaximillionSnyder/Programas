@@ -51,6 +51,7 @@ Card 2). No hay dos pantallas que se intercambian: hay un area fija y piezas que
 | Curva de aprendizaje | Baja, pero escribes la geometria a mano | Baja si el layout ya existe; rara si no |
 | Se adapta a cambios de layout | No: si mueves un texto, reajustas las fracciones | Si: mueves el composable y el morph sigue |
 | Ideal para | Morphin visual preciso, piezas que no son layouts normales | Refactor de una pantalla real donde los elementos ya existen |
+| **Duración medida en dispositivo** | 409–525 ms, simétrica | 175–467 ms, **asimétrica y más rápida** |
 
 ## Card 1 - cuadrados interpolados
 
@@ -169,3 +170,31 @@ Dos cosas que hay que respetar para compilar aqui:
 Verificado: `:app:compileDebugKotlin` y `assembleDebug` pasan, APK de 11.6 MB.
 La geometria del morph se valido numericamente (todas las piezas dentro de 0..1, sin
 solapamientos, barras apoyadas sobre la linea base).
+
+## Verificación en dispositivo real
+
+Probado en un POCO X6 Pro 5G (Android 17, 1220x2712, densidad 480) con la app instalada
+por adb. Detalle completo y artefactos en [`README.md`](README.md) y
+[`docs/verificacion/`](docs/verificacion/).
+
+**El requisito central se cumple.** Alto de la card medido sobre 207 fotogramas:
+
+| | Alto | Variación |
+| --- | --- | --- |
+| Card 1 | 590 – 592 px | 2 px (antialiasing) |
+| Card 2 | 590 – 592 px | 2 px (antialiasing) |
+
+**Duración real del morph**, muestreando el píxel de la barra más alta:
+
+| | info → gráfica | gráfica → info |
+| --- | --- | --- |
+| Card 1 | 467 / 525 / 467 ms | 409 / 409 / 409 ms |
+| Card 2 | 292 / 467 / 467 ms | 175 / 233 / 233 ms |
+
+La diferencia entre ambas técnicas **no es solo de código: se nota en el ritmo**. La
+Card 1 es simétrica y pausada; la Card 2 vuelve casi el doble de rápido, porque usa el
+*spring* por defecto de `sharedElement`. Para igualarlas hay que darle a la Card 2 un
+`boundsTransform` explícito con un `tween`.
+
+> El video de la medición es de ~17 fps: ±58 ms de incertidumbre. Sirve para comparar
+> las dos cards entre sí, no para certificar milisegundos exactos.
