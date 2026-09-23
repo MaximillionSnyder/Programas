@@ -12,6 +12,7 @@ las piezas de dentro.
 | 4 | **Cubos animados**: cada pieza es un cubo 3D y salen en ola hasta la gráfica | `morph/CubeMorphCard.kt` |
 | 5 | **Variante 1 — Lluvia**: el gráfico está oculto; los cubos caen y lo construyen | `morph/CubeRainCard.kt` |
 | 6 | **Variante 2 — Se deshace**: los cubos nacen del número y vuelan en arco | `morph/CubeBurstCard.kt` |
+| 7 | **Variante 3 — Se ponen de pie**: los cubos giran sobre su eje hasta aparecer | `morph/CubeFlipCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -29,6 +30,49 @@ Toca cada card para alternarla.
 
 El requisito cambió: **el gráfico no debe verse en el estado información**. Eso obliga a
 reinventar de dónde salen los cubos, porque ya no pueden estar esperando a la vista.
+
+### Variante 3 — Los cubos se ponen de pie · `morph/CubeFlipCard.kt`
+
+**Mecánica distinta a las dos anteriores: aquí los cubos no viajan.** Cada uno ya está en
+su sitio, pero **girado 90° sobre su eje vertical**, así que de perfil no ocupa nada y no
+se ve. Al tocar, cada cubo **gira hasta quedar de frente** y crece a su altura, escalonado
+de izquierda a derecha: la gráfica se levanta como una fila de fichas.
+
+El giro se proyecta a 2D encogiendo el ancho (`|cos(ángulo)|`), que es exactamente lo que
+hace un objeto al rotar sobre su eje vertical visto de frente. Mientras gira está más
+grueso (se está viendo de canto), y eso refuerza la lectura de volumen.
+
+```kotlin
+val angle = (1f - eased) * (PI.toFloat() / 2f)   // 90° -> 0°
+val w = targetW * cos(angle)                      // de perfil: ancho 0, invisible
+val h = targetH * eased
+val x = index * cell + (targetW - w) / 2f         // centrado: al girar no se desplaza
+```
+
+**Verificación offline** (la del dispositivo está pendiente, ver abajo). Se replicó la
+matemática exacta y se midió el ancho relativo de los 28 cubos:
+
+```
+t=0.00:  invisibles=28/28   a ancho completo= 0/28
+t=0.50:  invisibles= 3/28   a ancho completo=16/28
+t=1.00:  invisibles= 0/28   a ancho completo=28/28
+
+ancho relativo por cubo (0=invisible):
+     0123456789012345678901234567
+t=0.0 |                            |
+t=0.2 |#####++...                  |
+t=0.4 |###############++...        |
+t=0.6 |#########################++.|
+t=0.8 |############################|
+```
+
+En t=0 el ancho máximo es **0.0000**: el gráfico está completamente oculto. La onda de
+izquierda a derecha se ve en las tiras.
+
+> **Pendiente:** la grabación en dispositivo de esta variante no se pudo hacer todavía
+> porque el teléfono quedó bloqueado y HyperOS bloquea la inyección de eventos, así que no
+> puedo desbloquearlo desde adb. Queda un vigilante en `~/vigila-desbloqueo.sh` que graba
+> automáticamente en cuanto se desbloquee.
 
 ### Variante 2 — El dato se deshace en cubos · `morph/CubeBurstCard.kt`
 
