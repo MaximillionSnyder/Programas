@@ -14,6 +14,7 @@ las piezas de dentro.
 | 6 | **Variante 2 — Se deshace**: los cubos nacen del número y vuelan en arco | `morph/CubeBurstCard.kt` |
 | 7 | **Variante 3 — Se ponen de pie**: los cubos giran sobre su eje hasta aparecer | `morph/CubeFlipCard.kt` |
 | 8 | **Variante 4 — El bloque**: cae un bloque macizo y luego se resuelve en el perfil | `morph/CubeSlabCard.kt` |
+| 9 | **Variante 5 — Convergen**: los cubos entran por los dos bordes y se cierran desde el centro | `morph/CubeConvergeCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -31,6 +32,30 @@ Toca cada card para alternarla.
 
 El requisito cambió: **el gráfico no debe verse en el estado información**. Eso obliga a
 reinventar de dónde salen los cubos, porque ya no pueden estar esperando a la vista.
+
+### Variante 5 — Convergen desde los lados · `morph/CubeConvergeCard.kt`
+
+**Movimiento horizontal**, distinto de caer (v1) o nacer del dato (v2): los cubos **entran
+por los lados** —la mitad izquierda desde la izquierda, la mitad derecha desde la derecha—
+y se deslizan hasta su sitio describiendo un arco.
+
+El escalonado va **de dentro hacia fuera**: los cubos centrales aterrizan primero y la
+gráfica **se cierra desde el medio hacia los extremos**, al revés que la lluvia.
+
+Al entrar vienen lanzados: se estiran un 35% a mitad de camino y recuperan su ancho al
+posarse.
+
+**Verificación offline.** Se replicó la matemática y se contó cuántos cubos están dentro
+del lienzo:
+
+```
+t=0.0:  dentro del lienzo= 0/28   fuera (ocultos)=28/28
+t=0.3:  dentro del lienzo=10/28   fuera (ocultos)=18/28
+t=0.6:  dentro del lienzo=25/28   fuera (ocultos)= 3/28
+t=1.0:  dentro del lienzo=28/28   fuera (ocultos)= 0/28
+```
+
+En t=0 **ninguno** está dentro: el gráfico no se ve.
 
 ### Variante 4 — El bloque que se resuelve · `morph/CubeSlabCard.kt`
 
