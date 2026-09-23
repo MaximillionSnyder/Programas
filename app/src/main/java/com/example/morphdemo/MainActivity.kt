@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.morphdemo.data.SampleData
+import com.example.morphdemo.morph.CubeBurstCard
 import com.example.morphdemo.morph.CubeMorphCard
 import com.example.morphdemo.morph.CubeRainCard
 import com.example.morphdemo.morph.RectMorphCard
@@ -73,6 +74,29 @@ private fun Screen(auto: Boolean = false) {
 
         SectionHeader(
             number = "1",
+            name = "Variante 2 - El dato se deshace",
+            detail = "Los cubos nacen del numero y vuelan en arco hasta la grafica",
+        )
+        Spacer(Modifier.height(10.dp))
+        CubeBurstCard(
+            title = "Altura",
+            trailing = SampleData.ALTITUDE_TRAILING,
+            headlineLabel = SampleData.ALTITUDE_LABEL,
+            headlineValue = SampleData.ALTITUDE_VALUE,
+            headlineUnit = SampleData.ALTITUDE_UNIT,
+            details = SampleData.ALTITUDE_DETAILS,
+            hint = SampleData.ALTITUDE_HINT,
+            maxLabel = SampleData.ALTITUDE_MAX,
+            minLabel = SampleData.ALTITUDE_MIN,
+            series = SampleData.elevationProfile,
+            cubeColor = MaterialTheme.colorScheme.primary,
+            autoToggleMs = if (auto) 2600L else null,
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        SectionHeader(
+            number = "2",
             name = "Variante 1 - Lluvia de cubos",
             detail = "El grafico esta oculto; al tocar, los cubos caen y lo forman",
         )
@@ -95,7 +119,7 @@ private fun Screen(auto: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "2",
+            number = "3",
             name = "Cubos animados (ola)",
             detail = "La version anterior: el bloque se veia y se desplegaba",
         )
@@ -117,7 +141,7 @@ private fun Screen(auto: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "3",
+            number = "4",
             name = "Dato -> grafica (plano)",
             detail = "La misma idea con barras planas, para comparar",
         )
@@ -139,7 +163,7 @@ private fun Screen(auto: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "4",
+            number = "5",
             name = "Cuadrados animados",
             detail = "Rectangulos interpolados a mano con animateFloatAsState",
         )
@@ -155,7 +179,7 @@ private fun Screen(auto: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "4",
+            number = "6",
             name = "SharedTransitionLayout",
             detail = "animateBounds sobre layouts reales, sin calcular geometria",
         )

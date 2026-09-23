@@ -11,6 +11,7 @@ las piezas de dentro.
 | 3 | **Dato → gráfica**: primero el dato, al tocar los cuadrados se vuelven la gráfica | `morph/SeriesMorphCard.kt` |
 | 4 | **Cubos animados**: cada pieza es un cubo 3D y salen en ola hasta la gráfica | `morph/CubeMorphCard.kt` |
 | 5 | **Variante 1 — Lluvia**: el gráfico está oculto; los cubos caen y lo construyen | `morph/CubeRainCard.kt` |
+| 6 | **Variante 2 — Se deshace**: los cubos nacen del número y vuelan en arco | `morph/CubeBurstCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -28,6 +29,41 @@ Toca cada card para alternarla.
 
 El requisito cambió: **el gráfico no debe verse en el estado información**. Eso obliga a
 reinventar de dónde salen los cubos, porque ya no pueden estar esperando a la vista.
+
+### Variante 2 — El dato se deshace en cubos · `morph/CubeBurstCard.kt`
+
+**Estado información:** igual que la variante 1 — solo el dato, ningún cubo.
+
+**Al tocar:** los cubos **nacen del propio número**. No entran desde fuera: aparecen
+**encima del `9`**, en un enjambre compacto, y desde ahí **vuelan en arco** hasta su
+posición en la gráfica mientras el número se desvanece.
+
+La diferencia conceptual con la variante 1 es la que importa: allí los cubos **llegan** a
+la tarjeta; aquí **salen del dato**. No parece que aparezca una gráfica, parece que el
+dato **se descompone** en las piezas que lo explican.
+
+**Cómo se consigue:**
+
+- **Origen común** en el centro del número (`ORIGIN_X`, `ORIGIN_Y`), con una dispersión
+  determinista alrededor (`jitter(index, salt)`), para que el enjambre no sea un punto
+  único ni cambie entre fotogramas.
+- **Vuelo en curva**: una Bézier cuadrática con el punto de control **por encima** de los
+  dos extremos, así el recorrido es un arco y no una recta.
+- **Crecen desde cero** (`grow = local / 0.30`): al principio son un punto, no un cubo.
+  Por eso en el estado información no se ve nada aunque el origen esté a la vista.
+
+```kotlin
+val c1x = (p0x + targetX) / 2f
+val c1y = minOf(p0y, targetY) - size.height * BURST_ARC   // el arco
+val x = u*u*p0x + 2f*u*local*c1x + local*local*targetX
+val y = u*u*p0y + 2f*u*local*c1y + local*local*targetY
+```
+
+**Verificación** sobre 1438 fotogramas de `demo6.mp4`:
+
+- En el estado información **no hay gráfico** (`v2_dato.png`).
+- En `v2_nacimiento.png` se ve el enjambre **sobre el propio `9`** y su dispersión.
+- El centroide del texto `ALTURA` varía **0.05 px**: la card no se mueve.
 
 ### Variante 1 — Lluvia de cubos · `morph/CubeRainCard.kt`
 
