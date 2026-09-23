@@ -9,6 +9,7 @@ las piezas de dentro.
 | 1 | Cuadrados interpolados a mano (`animateFloatAsState` + `lerp`) | `morph/RectMorphCard.kt` |
 | 2 | `SharedTransitionLayout` + `Modifier.sharedElement` | `morph/SharedMorphCard.kt` |
 | 3 | **Dato → gráfica**: primero el dato, al tocar los cuadrados se vuelven la gráfica | `morph/SeriesMorphCard.kt` |
+| 4 | **Cubos animados**: cada pieza es un cubo 3D y salen en ola hasta la gráfica | `morph/CubeMorphCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -19,6 +20,70 @@ En la Card 2 no se calcula geometría: se escriben dos layouts reales y se marca
 misma key qué piezas viajan entre ambos estados.
 
 Toca cada card para alternarla.
+
+---
+
+## Cubos animados: la card que se despliega en ola
+
+`CubeMorphCard` lleva la idea anterior un paso más allá. En vez de barras planas, **cada
+pieza es un cubo en perspectiva isométrica**: cara superior más clara, cara lateral más
+oscura y cara frontal del color base. Eso solo ya cambia por completo cómo se lee el
+movimiento — dejan de ser barras que se estiran y pasan a ser bloques que viajan.
+
+### Cómo se inventó el movimiento
+
+Tres decisiones, y cada una resuelve un problema distinto:
+
+**1. Escalonado (`STAGGER = 0.45`).** Cada cubo no arranca a la vez: el cubo `i` empieza
+en `i / n * 0.45` del recorrido total. El bloque no salta entero de golpe, **se deshace
+en una ola de izquierda a derecha**. Es lo que hace que se lea como una animación y no
+como un cambio de estado.
+
+**2. Saltito (`HOP`).** Cada cubo sube y baja una vez mientras viaja
+(`-sin(local * π) * altura`). Sin esto el movimiento es un deslizamiento aburrido; con
+esto los cubos **vuelan en arco**.
+
+**3. El cubo se hincha a mitad de camino.** La profundidad se multiplica por
+`1 + 0.85 * sin(local * π)`, así que el cubo se engorda justo cuando está en el aire y
+adelgaza al aterrizar. Es el truco que vende la ilusión de que **gira sobre sí mismo**:
+sin él, un cubo que solo se traslada parece una barra que se mueve.
+
+```kotlin
+val start = (index.toFloat() / count) * STAGGER
+val local = FastOutSlowInEasing.transform(((t - start) / (1f - STAGGER)).coerceIn(0f, 1f))
+
+y -= sin(local * PI.toFloat()) * size.height * HOP          // el arco
+val depth = baseDepth * (1f + 0.85f * sin(local * PI.toFloat()))   // el giro
+```
+
+### Un detalle de rendimiento
+
+El progreso se guarda como `State<Float>` y se lee **dentro del Canvas**, no en la
+composición:
+
+```kotlin
+val progress: State<Float> = animateFloatAsState(...)
+Canvas(modifier) {
+    val tNow = progress.value      // se lee en la fase de dibujo
+    ...
+}
+```
+
+Así cada fotograma invalida solo el dibujo, no la tarjeta entera con sus textos. Con 28
+cubos animados eso se nota.
+
+### Verificación
+
+Alto de la card sobre **250 fotogramas** de `demo4.mp4`. El borde de la card tiene muy
+poco contraste y una sombra suave, así que medirlo por umbral da falsos positivos de
+±3 px por ruido del encoder. La prueba fiable es una **referencia interna de alto
+contraste**: el centroide del texto `ALTURA`.
+
+```
+centroide de 'ALTURA': min=107.45  max=107.51  variacion=0.06 px   (250 fotogramas)
+```
+
+La card no se mueve ni una décima de píxel. El contenedor es fijo.
 
 ---
 
@@ -168,6 +233,10 @@ darle a la Card 2 un `boundsTransform` explícito con un `tween`.
 | `serie_morph.png` | La transición dato → gráfica a 20 fps |
 | `serie_pulso.png` | La card de pulso alternando (1 fps) |
 | `demo3.mp4` | Grabación de las cards nuevas (12 s) |
+| `cubos_dato.png` | La card de cubos en estado dato, junto a la versión plana |
+| `cubos_grafica.png` | La misma card ya desplegada en gráfica |
+| `cubos_morph.png` | **La ola**: los cubos salen escalonados y aterrizan, a 20 fps |
+| `demo4.mp4` | Grabación de los cubos animados (12 s) |
 
 Para reproducir la grabación:
 
