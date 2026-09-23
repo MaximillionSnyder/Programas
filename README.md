@@ -323,6 +323,18 @@ fotograma muestra ambas técnicas en la misma fase y se pueden comparar lado a l
 
 Sin el extra, la app funciona normal: se alternan solo al tocarlas.
 
+### Ver una variante concreta
+
+Con nueve secciones la pantalla es larga y hay que desplazarse. Para revisar una variante
+sin buscar, se lanza directamente con `variant`:
+
+```bash
+adb shell am force-stop com.example.morphdemo
+adb shell am start -n com.example.morphdemo/.MainActivity --ei variant 3 --ez auto true
+```
+
+`variant` es el número de la sección (1..9); `0` o ausente muestra todas.
+
 ### ¿Por qué hace falta?
 
 Porque **HyperOS (Xiaomi) bloquea inyectar eventos de entrada desde adb**:

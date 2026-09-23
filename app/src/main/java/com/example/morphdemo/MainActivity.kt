@@ -39,16 +39,18 @@ class MainActivity : ComponentActivity() {
         // Modo auto-demo, se activa con:  am start ... --ez auto true
         // Hace falta porque HyperOS bloquea inyectar eventos de entrada desde adb.
         val auto = intent.getBooleanExtra("auto", false)
+        // Variante concreta:  am start ... --ei variant 3   (0 = todas)
+        val variant = intent.getIntExtra("variant", 0)
         setContent {
             MorphDemoTheme {
-                Screen(auto)
+                Screen(auto, variant)
             }
         }
     }
 }
 
 @Composable
-private fun Screen(auto: Boolean = false) {
+private fun Screen(auto: Boolean = false, only: Int = 0) {
     val onBackground = MaterialTheme.colorScheme.onBackground
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -75,197 +77,216 @@ private fun Screen(auto: Boolean = false) {
 
         Spacer(Modifier.height(28.dp))
 
-        SectionHeader(
-            number = "1",
-            name = "Variante 5 - Convergen desde los lados",
-            detail = "Los cubos entran por los bordes y se cierran desde el centro",
-        )
-        Spacer(Modifier.height(10.dp))
-        CubeConvergeCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            hint = SampleData.ALTITUDE_HINT,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2600L else null,
-        )
+        if (only == 0 || only == 1) {
+            SectionHeader(
+                number = "1",
+                name = "Variante 5 - Convergen desde los lados",
+                detail = "Los cubos entran por los bordes y se cierran desde el centro",
+            )
+            Spacer(Modifier.height(10.dp))
+            CubeConvergeCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                hint = SampleData.ALTITUDE_HINT,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                cubeColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "2",
-            name = "Variante 4 - El bloque que se resuelve",
-            detail = "Cae un bloque macizo y despues se asienta en el perfil",
-        )
-        Spacer(Modifier.height(10.dp))
-        CubeSlabCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            hint = SampleData.ALTITUDE_HINT,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2600L else null,
-        )
+        if (only == 0 || only == 2) {
+            SectionHeader(
+                number = "2",
+                name = "Variante 4 - El bloque que se resuelve",
+                detail = "Cae un bloque macizo y despues se asienta en el perfil",
+            )
+            Spacer(Modifier.height(10.dp))
+            CubeSlabCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                hint = SampleData.ALTITUDE_HINT,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                cubeColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "3",
-            name = "Variante 3 - Se ponen de pie",
-            detail = "Los cubos giran sobre su eje hasta quedar de frente",
-        )
-        Spacer(Modifier.height(10.dp))
-        CubeFlipCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            hint = SampleData.ALTITUDE_HINT,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2600L else null,
-        )
+        if (only == 0 || only == 3) {
+            SectionHeader(
+                number = "3",
+                name = "Variante 3 - Se ponen de pie",
+                detail = "Los cubos giran sobre su eje hasta quedar de frente",
+            )
+            Spacer(Modifier.height(10.dp))
+            CubeFlipCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                hint = SampleData.ALTITUDE_HINT,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                cubeColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "4",
-            name = "Variante 2 - El dato se deshace",
-            detail = "Los cubos nacen del numero y vuelan en arco hasta la grafica",
-        )
-        Spacer(Modifier.height(10.dp))
-        CubeBurstCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            hint = SampleData.ALTITUDE_HINT,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2600L else null,
-        )
+        if (only == 0 || only == 4) {
+            SectionHeader(
+                number = "4",
+                name = "Variante 2 - El dato se deshace",
+                detail = "Los cubos nacen del numero y vuelan en arco hasta la grafica",
+            )
+            Spacer(Modifier.height(10.dp))
+            CubeBurstCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                hint = SampleData.ALTITUDE_HINT,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                cubeColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "5",
-            name = "Variante 1 - Lluvia de cubos",
-            detail = "El grafico esta oculto; al tocar, los cubos caen y lo forman",
-        )
-        Spacer(Modifier.height(10.dp))
-        CubeRainCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            hint = SampleData.ALTITUDE_HINT,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2600L else null,
-        )
+        if (only == 0 || only == 5) {
+            SectionHeader(
+                number = "5",
+                name = "Variante 1 - Lluvia de cubos",
+                detail = "El grafico esta oculto; al tocar, los cubos caen y lo forman",
+            )
+            Spacer(Modifier.height(10.dp))
+            CubeRainCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                hint = SampleData.ALTITUDE_HINT,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                cubeColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "6",
-            name = "Cubos animados (ola)",
-            detail = "La version anterior: el bloque se veia y se desplegaba",
-        )
-        Spacer(Modifier.height(10.dp))
-        CubeMorphCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2600L else null,
-        )
+        if (only == 0 || only == 6) {
+            SectionHeader(
+                number = "6",
+                name = "Cubos animados (ola)",
+                detail = "La version anterior: el bloque se veia y se desplegaba",
+            )
+            Spacer(Modifier.height(10.dp))
+            CubeMorphCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                cubeColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "7",
-            name = "Dato -> grafica (plano)",
-            detail = "La misma idea con barras planas, para comparar",
-        )
-        Spacer(Modifier.height(10.dp))
-        SeriesMorphCard(
-            title = "Altura",
-            trailing = SampleData.ALTITUDE_TRAILING,
-            headlineLabel = SampleData.ALTITUDE_LABEL,
-            headlineValue = SampleData.ALTITUDE_VALUE,
-            headlineUnit = SampleData.ALTITUDE_UNIT,
-            details = SampleData.ALTITUDE_DETAILS,
-            maxLabel = SampleData.ALTITUDE_MAX,
-            minLabel = SampleData.ALTITUDE_MIN,
-            series = SampleData.elevationProfile,
-            barColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2000L else null,
-        )
+        if (only == 0 || only == 7) {
+            SectionHeader(
+                number = "7",
+                name = "Dato -> grafica (plano)",
+                detail = "La misma idea con barras planas, para comparar",
+            )
+            Spacer(Modifier.height(10.dp))
+            SeriesMorphCard(
+                title = "Altura",
+                trailing = SampleData.ALTITUDE_TRAILING,
+                headlineLabel = SampleData.ALTITUDE_LABEL,
+                headlineValue = SampleData.ALTITUDE_VALUE,
+                headlineUnit = SampleData.ALTITUDE_UNIT,
+                details = SampleData.ALTITUDE_DETAILS,
+                maxLabel = SampleData.ALTITUDE_MAX,
+                minLabel = SampleData.ALTITUDE_MIN,
+                series = SampleData.elevationProfile,
+                barColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2000L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "8",
-            name = "Cuadrados animados",
-            detail = "Rectangulos interpolados a mano con animateFloatAsState",
-        )
-        Spacer(Modifier.height(10.dp))
-        RectMorphCard(
-            title = SampleData.TITLE,
-            amount = SampleData.AMOUNT,
-            subtitle = SampleData.SUBTITLE,
-            categories = SampleData.categories,
-            autoToggleMs = if (auto) 2000L else null,
-        )
+        if (only == 0 || only == 8) {
+            SectionHeader(
+                number = "8",
+                name = "Cuadrados animados",
+                detail = "Rectangulos interpolados a mano con animateFloatAsState",
+            )
+            Spacer(Modifier.height(10.dp))
+            RectMorphCard(
+                title = SampleData.TITLE,
+                amount = SampleData.AMOUNT,
+                subtitle = SampleData.SUBTITLE,
+                categories = SampleData.categories,
+                autoToggleMs = if (auto) 2000L else null,
+            )
 
-        Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(32.dp))
+        }
 
-        SectionHeader(
-            number = "9",
-            name = "SharedTransitionLayout",
-            detail = "animateBounds sobre layouts reales, sin calcular geometria",
-        )
-        Spacer(Modifier.height(10.dp))
-        SharedMorphCard(
-            title = SampleData.TITLE,
-            amount = SampleData.AMOUNT,
-            subtitle = SampleData.SUBTITLE,
-            categories = SampleData.categories,
-            autoToggleMs = if (auto) 2000L else null,
-        )
+        if (only == 0 || only == 9) {
+            SectionHeader(
+                number = "9",
+                name = "SharedTransitionLayout",
+                detail = "animateBounds sobre layouts reales, sin calcular geometria",
+            )
+            Spacer(Modifier.height(10.dp))
+            SharedMorphCard(
+                title = SampleData.TITLE,
+                amount = SampleData.AMOUNT,
+                subtitle = SampleData.SUBTITLE,
+                categories = SampleData.categories,
+                autoToggleMs = if (auto) 2000L else null,
+            )
 
-        Spacer(Modifier.height(28.dp))
-    }
+            Spacer(Modifier.height(28.dp))
+        }
+        }
+
 }
 
 @Composable
