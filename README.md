@@ -10,6 +10,7 @@ las piezas de dentro.
 | 2 | `SharedTransitionLayout` + `Modifier.sharedElement` | `morph/SharedMorphCard.kt` |
 | 3 | **Dato → gráfica**: primero el dato, al tocar los cuadrados se vuelven la gráfica | `morph/SeriesMorphCard.kt` |
 | 4 | **Cubos animados**: cada pieza es un cubo 3D y salen en ola hasta la gráfica | `morph/CubeMorphCard.kt` |
+| 5 | **Variante 1 — Lluvia**: el gráfico está oculto; los cubos caen y lo construyen | `morph/CubeRainCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -20,6 +21,47 @@ En la Card 2 no se calcula geometría: se escriben dos layouts reales y se marca
 misma key qué piezas viajan entre ambos estados.
 
 Toca cada card para alternarla.
+
+---
+
+## Variantes: el gráfico oculto
+
+El requisito cambió: **el gráfico no debe verse en el estado información**. Eso obliga a
+reinventar de dónde salen los cubos, porque ya no pueden estar esperando a la vista.
+
+### Variante 1 — Lluvia de cubos · `morph/CubeRainCard.kt`
+
+**Estado información:** solo el dato. `Desnivel 9 m`, su detalle y una pista
+(`Toca para ver el perfil`) que hace intencional el hueco de abajo. **Ningún cubo.**
+
+**Al tocar:** cada cubo **cae desde fuera de la tarjeta** con aceleración de gravedad,
+escalonado de izquierda a derecha, y **se aplasta contra la línea base** antes de quedarse
+quieto. La gráfica se construye sola, de izquierda a derecha.
+
+**El truco para que no se vea nada:** los cubos no se ocultan con opacidad ni con una
+bandera. Viven **por encima del lienzo** (`startY = -altura - 6%`) y el `Canvas` lleva
+`Modifier.clipToBounds()`, así que simplemente no existen en pantalla hasta que empiezan a
+caer. Al volver, suben y desaparecen por arriba: el mismo camino al revés.
+
+```kotlin
+val fallT = (local / RAIN_FALL_END).coerceAtMost(1f)   // 0..0.72 del recorrido propio
+val y = startY + (targetY - startY) * (fallT * fallT)  // gravedad: acelera al caer
+
+// impacto: se comprime en vertical y se ensancha en horizontal
+val impact = sin(settleT * PI)
+val h = targetH * (1f - RAIN_SQUASH * impact)
+val w = targetW * (1f + RAIN_WIDEN * impact)
+```
+
+Las volteretas salen de animar la profundidad mientras cae (`sin(fallT * π * 2)`), así que
+el cubo gira dos veces en el aire.
+
+**Verificación** sobre 483 fotogramas de `demo5.mp4`:
+
+- En el estado información **no hay ni un píxel de gráfico** (`v1_dato.png`).
+- En `v1_caida.png` se ve la cascada: los cubos entrando por arriba, escalonados.
+- El centroide del texto `ALTURA` varía **0.05 px** en los 483 fotogramas: la card no se
+  mueve.
 
 ---
 

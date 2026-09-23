@@ -53,6 +53,7 @@ object SampleData {
     const val ALTITUDE_VALUE = "9"
     const val ALTITUDE_UNIT = "m"
     const val ALTITUDE_DETAILS = "Max 96 m - Min 82 m"
+    const val ALTITUDE_HINT = "Toca para ver el perfil"
     const val ALTITUDE_MAX = "Max 96 m"
     const val ALTITUDE_MIN = "Min 82 m"
 

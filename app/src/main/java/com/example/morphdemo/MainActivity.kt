@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.morphdemo.data.SampleData
 import com.example.morphdemo.morph.CubeMorphCard
+import com.example.morphdemo.morph.CubeRainCard
 import com.example.morphdemo.morph.RectMorphCard
 import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
@@ -72,8 +73,31 @@ private fun Screen(auto: Boolean = false) {
 
         SectionHeader(
             number = "1",
-            name = "Cubos animados",
-            detail = "Cubos 3D que salen del bloque y se despliegan en la grafica",
+            name = "Variante 1 - Lluvia de cubos",
+            detail = "El grafico esta oculto; al tocar, los cubos caen y lo forman",
+        )
+        Spacer(Modifier.height(10.dp))
+        CubeRainCard(
+            title = "Altura",
+            trailing = SampleData.ALTITUDE_TRAILING,
+            headlineLabel = SampleData.ALTITUDE_LABEL,
+            headlineValue = SampleData.ALTITUDE_VALUE,
+            headlineUnit = SampleData.ALTITUDE_UNIT,
+            details = SampleData.ALTITUDE_DETAILS,
+            hint = SampleData.ALTITUDE_HINT,
+            maxLabel = SampleData.ALTITUDE_MAX,
+            minLabel = SampleData.ALTITUDE_MIN,
+            series = SampleData.elevationProfile,
+            cubeColor = MaterialTheme.colorScheme.primary,
+            autoToggleMs = if (auto) 2600L else null,
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        SectionHeader(
+            number = "2",
+            name = "Cubos animados (ola)",
+            detail = "La version anterior: el bloque se veia y se desplegaba",
         )
         Spacer(Modifier.height(10.dp))
         CubeMorphCard(
@@ -87,13 +111,13 @@ private fun Screen(auto: Boolean = false) {
             minLabel = SampleData.ALTITUDE_MIN,
             series = SampleData.elevationProfile,
             cubeColor = MaterialTheme.colorScheme.primary,
-            autoToggleMs = if (auto) 2000L else null,
+            autoToggleMs = if (auto) 2600L else null,
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "2",
+            number = "3",
             name = "Dato -> grafica (plano)",
             detail = "La misma idea con barras planas, para comparar",
         )
@@ -115,7 +139,7 @@ private fun Screen(auto: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "3",
+            number = "4",
             name = "Cuadrados animados",
             detail = "Rectangulos interpolados a mano con animateFloatAsState",
         )

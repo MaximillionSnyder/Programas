@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,8 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -40,49 +39,46 @@ import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.sin
 
-/** Alto fijo de la card: el contenedor no cambia entre el bloque de cubos y la grafica. */
-val CubeCardHeight: Dp = 268.dp
+val RainCardHeight: Dp = 268.dp
 
-private val CubeBodyHeight: Dp = 168.dp
+private val RainBodyHeight: Dp = 168.dp
 
-// --- Geometria normalizada del cuerpo ------------------------------------------------
+/** Estado GRAFICA: donde aterrizan los cubos. */
+private const val RAIN_BASELINE = 0.88f
+private const val RAIN_MAX_H = 0.76f
+private const val RAIN_MIN_H = 0.05f
 
-/** Estado DATO: los cubos apilados en un bloque compacto, abajo a la izquierda. */
-private const val PILE_W = 0.40f
-private const val PILE_BASELINE = 0.94f
-private const val PILE_MAX_H = 0.26f
-private const val PILE_MIN_H = 0.025f
+/** Cuanto del recorrido se dedica al escalonado entre cubos. */
+private const val RAIN_STAGGER = 0.50f
 
-/** Estado GRAFICA: los mismos cubos repartidos a lo ancho. */
-private const val CHART_BASELINE = 0.88f
-private const val CHART_MAX_H = 0.74f
-private const val CHART_MIN_H = 0.04f
+/** Fraccion del recorrido propio de cada cubo que dura la caida; el resto es el impacto. */
+private const val RAIN_FALL_END = 0.72f
 
-/** Cuanto del recorrido total se dedica al escalonado entre cubos. */
-private const val STAGGER = 0.45f
-
-/** Altura del saltito que da cada cubo mientras viaja (normalizada). */
-private const val HOP = 0.085f
+/** Aplastado al aterrizar: se comprime en vertical y se ensancha en horizontal. */
+private const val RAIN_SQUASH = 0.34f
+private const val RAIN_WIDEN = 0.24f
 
 /**
- * Card con cubos animados: primero el dato, y al tocar los cubos salen del bloque y se
- * despliegan hasta formar la grafica.
+ * VARIANTE 1 - Lluvia de cubos.
  *
- * El movimiento es **escalonado**: cada cubo arranca un poco despues que el anterior, asi
- * que el bloque se deshace en una ola de izquierda a derecha en vez de saltar entero de
- * golpe. Cada cubo ademas da un saltito y se hincha a mitad de camino, de modo que se lee
- * como un cubo que gira en el aire y no como una barra que se estira.
+ * En reposo la tarjeta muestra **solo la informacion**: el grafico no se ve, porque los
+ * cubos viven por encima del lienzo y el `Canvas` los recorta. Al tocar, cada cubo **cae**
+ * con aceleracion de gravedad, escalonado de izquierda a derecha, y **se aplasta contra la
+ * linea base** antes de quedarse quieto. Al final aparecen las etiquetas.
+ *
+ * Al volver, los cubos suben y desaparecen por arriba, que es el mismo camino al reves.
  *
  * @param series valores normalizados 0f..1f, uno por cubo.
  */
 @Composable
-fun CubeMorphCard(
+fun CubeRainCard(
     title: String,
     trailing: String,
     headlineLabel: String,
     headlineValue: String,
     headlineUnit: String?,
     details: String,
+    hint: String,
     maxLabel: String,
     minLabel: String,
     series: List<Float>,
@@ -101,24 +97,24 @@ fun CubeMorphCard(
         }
     }
 
-    // Se guarda el State, no el Float: asi el Canvas lo lee en la fase de dibujo y no
-    // hay que recomponer la tarjeta entera en cada fotograma.
     val progress: State<Float> = animateFloatAsState(
         targetValue = if (showChart) 1f else 0f,
-        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
-        label = "cubeMorph",
+        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
+        label = "cubeRain",
     )
     val t by progress
 
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val onSurface = MaterialTheme.colorScheme.onSurface
 
-    val infoAlpha = (1f - t / 0.28f).coerceIn(0f, 1f)
-    val chartAlpha = ((t - 0.60f) / 0.40f).coerceIn(0f, 1f)
+    // La info se va rapido, antes de que aterrice el primer cubo.
+    val infoAlpha = (1f - t / 0.18f).coerceIn(0f, 1f)
+    // Las etiquetas entran cuando ya casi todo ha aterrizado.
+    val chartAlpha = ((t - 0.72f) / 0.28f).coerceIn(0f, 1f)
 
     Card(
         onClick = { showChart = !showChart },
-        modifier = modifier.fillMaxWidth().height(CubeCardHeight),
+        modifier = modifier.fillMaxWidth().height(RainCardHeight),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
@@ -140,57 +136,64 @@ fun CubeMorphCard(
                 Text(text = trailing, fontSize = 11.sp, color = muted)
             }
 
-            BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(CubeBodyHeight)) {
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(RainBodyHeight)) {
                 val cw = maxWidth
                 val ch = maxHeight
 
-                Canvas(modifier = Modifier.fillMaxSize()) {
+                // clipToBounds es lo que mantiene el grafico oculto: los cubos esperan
+                // por encima del lienzo y no se dibujan hasta que empiezan a caer.
+                Canvas(modifier = Modifier.fillMaxSize().clipToBounds()) {
                     val tNow = progress.value
                     val count = series.size
                     if (count == 0) return@Canvas
 
-                    val pileCell = size.width * PILE_W / count
-                    val chartCell = size.width / count
+                    val cell = size.width / count
 
                     series.forEachIndexed { index, fraction ->
-                        // Progreso propio de este cubo: arranca escalonado.
-                        val start = (index.toFloat() / count) * STAGGER
-                        val span = 1f - STAGGER
-                        val raw = ((tNow - start) / span).coerceIn(0f, 1f)
-                        val local = FastOutSlowInEasing.transform(raw)
+                        val start = (index.toFloat() / count) * RAIN_STAGGER
+                        val span = 1f - RAIN_STAGGER
+                        val local = ((tNow - start) / span).coerceIn(0f, 1f)
 
-                        // Bloque compacto -> posicion en la grafica.
-                        val pileW = pileCell * 0.78f
-                        val pileH = size.height * (PILE_MIN_H + fraction * PILE_MAX_H)
-                        val pileX = index * pileCell
-                        val pileY = size.height * PILE_BASELINE - pileH
+                        val targetH = size.height * (RAIN_MIN_H + fraction * RAIN_MAX_H)
+                        val targetW = cell * 0.60f
+                        val targetX = index * cell
+                        val targetY = size.height * RAIN_BASELINE - targetH
 
-                        val chartW = chartCell * 0.60f
-                        val chartH = size.height * (CHART_MIN_H + fraction * CHART_MAX_H)
-                        val chartX = index * chartCell
-                        val chartY = size.height * CHART_BASELINE - chartH
+                        // Punto de partida: justo por encima del lienzo, fuera de vista.
+                        val startY = -targetH - size.height * 0.06f
 
-                        val x = pileX + (chartX - pileX) * local
-                        val w = pileW + (chartW - pileW) * local
-                        val h = pileH + (chartH - pileH) * local
-                        var y = pileY + (chartY - pileY) * local
+                        val fallT = (local / RAIN_FALL_END).coerceAtMost(1f)
+                        val settleT = ((local - RAIN_FALL_END) / (1f - RAIN_FALL_END)).coerceIn(0f, 1f)
 
-                        // Saltito: sube y baja una vez durante el viaje.
-                        y -= sin(local * PI.toFloat()) * size.height * HOP
+                        // Gravedad: cae despacio al principio y acelera.
+                        val y = startY + (targetY - startY) * (fallT * fallT)
 
-                        // El cubo se hincha a mitad de camino: parece que gira en el aire.
-                        val baseDepth = w * 0.30f
-                        val depth = baseDepth * (1f + 0.85f * sin(local * PI.toFloat()))
+                        // Impacto: se aplasta y se recupera.
+                        val impact = sin(settleT * PI.toFloat())
+                        val h = targetH * (1f - RAIN_SQUASH * impact)
+                        val w = targetW * (1f + RAIN_WIDEN * impact)
+                        val x = targetX - (w - targetW) / 2f
+                        val yDraw = size.height * RAIN_BASELINE - h
+
+                        // Volteretas mientras cae: la profundidad oscila.
+                        val baseDepth = targetW * 0.30f
+                        val spin = if (fallT < 1f) sin(fallT * PI.toFloat() * 2f) else 0f
+                        val depth = baseDepth * (1f + 0.9f * spin)
 
                         drawCube(
-                            cube = Cube(x = x, y = y, w = w, h = h),
+                            cube = Cube(
+                                x = x,
+                                y = if (fallT < 1f) y else yDraw,
+                                w = w,
+                                h = if (fallT < 1f) h else h,
+                            ),
                             depth = depth,
                             color = cubeColor,
                         )
                     }
                 }
 
-                // --- Estado DATO ------------------------------------------------
+                // --- Estado DATO: solo informacion ------------------------------
                 if (infoAlpha > 0.01f) {
                     Text(
                         text = headlineLabel,
@@ -230,6 +233,16 @@ fun CubeMorphCard(
                         color = muted,
                         maxLines = 1,
                     )
+                    // Pista: el hueco de abajo es donde va a caer la grafica.
+                    Text(
+                        text = hint,
+                        modifier = Modifier
+                            .offset(x = 0.dp, y = ch * (RAIN_BASELINE + 0.02f))
+                            .alpha(infoAlpha),
+                        fontSize = 10.sp,
+                        color = muted,
+                        maxLines = 1,
+                    )
                 }
 
                 // --- Estado GRAFICA ---------------------------------------------
@@ -245,7 +258,7 @@ fun CubeMorphCard(
                     Text(
                         text = minLabel,
                         modifier = Modifier
-                            .offset(x = 0.dp, y = ch * (CHART_BASELINE + 0.03f))
+                            .offset(x = 0.dp, y = ch * (RAIN_BASELINE + 0.03f))
                             .alpha(chartAlpha),
                         fontSize = 10.sp,
                         color = muted,
