@@ -150,16 +150,18 @@ fun CubeSlabCard(
                     val fallT = (tNow / SLAB_FALL_END).coerceAtMost(1f)
                     val easedFall = fallT * fallT   // gravedad
                     val slabH = size.height * SLAB_MAX_H
-                    val slabTop = size.height * SLAB_BASELINE - slabH
-                    val startY = -slabH - size.height * 0.05f
-                    val blockTop = startY + (slabTop - startY) * easedFall
+
+                    // El bloque cae entero, asi que lo que se anima es su BASE: empieza
+                    // justo por encima del lienzo y baja hasta la linea base. Antes esto
+                    // se calculaba pero no se usaba, y el bloque aparecia ya apoyado.
+                    val blockBottomStart = -size.height * 0.05f
+                    val blockBottom = size.height * SLAB_BASELINE
+                    val bottom = blockBottomStart + (blockBottom - blockBottomStart) * easedFall
 
                     // Aplastado al aterrizar.
                     val impactT = ((tNow - SLAB_FALL_END) / 0.12f).coerceIn(0f, 1f)
                     val impact = sin(impactT * PI.toFloat()) * SLAB_SQUASH
                     val blockH = slabH * (1f - impact)
-                    val blockBottom = size.height * SLAB_BASELINE
-                    val blockTopDraw = blockBottom - blockH
 
                     series.forEachIndexed { index, fraction ->
                         // --- Fase 2: el bloque se resuelve, escalonado ---
@@ -173,7 +175,7 @@ fun CubeSlabCard(
 
                         val h = blockH + (targetH - blockH) * eased
                         val x = index * cell
-                        val y = blockBottom - h
+                        val y = bottom - h
 
                         val baseDepth = targetW * 0.30f
                         val depth = baseDepth * (1f + 0.5f * impact)
