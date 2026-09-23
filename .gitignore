@@ -1,0 +1,22 @@
+# Build
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Entorno local (ruta del SDK especifica de esta maquina)
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Salidas de empaquetado
+*.aab
+
+# Claves
+*.keystore
+*.jks
