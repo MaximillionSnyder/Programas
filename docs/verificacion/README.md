@@ -10,6 +10,10 @@ cards se alternaran solas (ver la sección correspondiente en el README raíz).
 | `hi2_morph.png` | Card 2 a 30 fps: el mismo morph, visiblemente más rápido |
 | `montage_coarse.png` | Rejilla de 12 s a 1 fps: alternancia completa de ambas cards |
 | `demo2.mp4` | Grabación original (12 s, 1220x2712) |
+| `serie_inicial.png` | Las dos cards de "Dato → gráfica" en estado gráfica |
+| `serie_morph.png` | La transición dato → gráfica de la card Altura, a 20 fps |
+| `serie_pulso.png` | La card de Pulso alternando, a 1 fps |
+| `demo3.mp4` | Grabación de las cards nuevas (12 s) |
 
 ## Cómo se generaron
 
@@ -61,3 +65,21 @@ ffmpeg -i demo2.mp4 -vf "crop=2:670:659:630" -f rawvideo -pix_fmt rgb24 - > col1
 | --- | --- |
 | Card 1 | 590 – 592 px |
 | Card 2 | 590 – 592 px |
+
+## Verificación de la card "Dato → gráfica"
+
+Alto de la card sobre **99 fotogramas** de `demo3.mp4`, muestreando una columna dentro
+de la card pero fuera del contenido (`x=1149`, y 680..1530):
+
+```
+borde superior : 30..31    variacion 1 px
+borde inferior : 794..796  variacion 2 px
+ALTO           : 765..767 px  variacion 2 px  -> ALTO CONSTANTE
+```
+
+Los 2 px son antialiasing. El contenedor no cambia entre el estado dato y el estado
+gráfica, así que la lista no da saltos al tocar.
+
+```bash
+ffmpeg -v error -i demo3.mp4 -vf "crop=2:850:1149:680" -f rawvideo -pix_fmt rgb24 - > sedge.raw
+```

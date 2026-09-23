@@ -8,6 +8,7 @@ las piezas de dentro.
 | --- | --- | --- |
 | 1 | Cuadrados interpolados a mano (`animateFloatAsState` + `lerp`) | `morph/RectMorphCard.kt` |
 | 2 | `SharedTransitionLayout` + `Modifier.sharedElement` | `morph/SharedMorphCard.kt` |
+| 3 | **Dato → gráfica**: primero el dato, al tocar los cuadrados se vuelven la gráfica | `morph/SeriesMorphCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -18,6 +19,47 @@ En la Card 2 no se calcula geometría: se escriben dos layouts reales y se marca
 misma key qué piezas viajan entre ambos estados.
 
 Toca cada card para alternarla.
+
+---
+
+## Dato → gráfica (el patrón que se quiere llevar a FitLog)
+
+`SeriesMorphCard` invierte el orden: **primero se lee el dato, y la gráfica aparece solo
+al tocar**. Es el caso de las tarjetas de entrenamiento, donde hoy la gráfica ocupa la
+tarjeta y los números viven en una sección aparte, debajo.
+
+**Estado dato:** el valor grande (`Desnivel 9 m`), su detalle (`Max 96 m - Min 82 m`) y
+una **miniatura del propio perfil** abajo a la izquierda.
+
+**Estado gráfica:** esa miniatura **se despliega** —las barras se reparten a lo ancho y
+crecen a su altura real— y quedan las etiquetas de máximo y mínimo.
+
+Son las mismas barras en los dos estados: lo único que cambia es dónde están y cuánto
+miden. La miniatura no es un adorno, es la gráfica en pequeño, así que el ojo ya sabe qué
+va a aparecer.
+
+```kotlin
+SeriesMorphCard(
+    title = "Altura",
+    trailing = "300 puntos",
+    headlineLabel = "Desnivel",
+    headlineValue = "9",
+    headlineUnit = "m",
+    details = "Max 96 m - Min 82 m",
+    maxLabel = "Max 96 m",
+    minLabel = "Min 82 m",
+    series = SampleData.elevationProfile,   // 28 valores normalizados 0f..1f
+    barColor = MaterialTheme.colorScheme.primary,
+)
+```
+
+**Por qué la serie se muestrea a ~28 barras.** Un GPX trae cientos de puntos; animar
+cientos de rectángulos es tirar frames. Se agrupa la serie en ~28 cubos y cada uno toma
+la altura de su tramo. El perfil se lee igual y la animación va sobrada.
+
+**Alto fijo de 268 dp.** Igual que en las otras dos cards: el borde no se mueve, así que
+la lista no da saltos al alternar. Verificado sobre 99 fotogramas: 765–767 px de alto,
+con 2 px de variación por antialiasing.
 
 ---
 
@@ -122,6 +164,10 @@ darle a la Card 2 un `boundsTransform` explícito con un `tween`.
 | `hi2_morph.png` | Card 2 a 30 fps: el mismo morph, visiblemente más rápido |
 | `montage_coarse.png` | Rejilla de 12 s a 1 fps: alternancia completa de ambas cards |
 | `demo2.mp4` | Grabación original de la app corriendo (12 s) |
+| `serie_inicial.png` | Las dos cards nuevas en estado gráfica |
+| `serie_morph.png` | La transición dato → gráfica a 20 fps |
+| `serie_pulso.png` | La card de pulso alternando (1 fps) |
+| `demo3.mp4` | Grabación de las cards nuevas (12 s) |
 
 Para reproducir la grabación:
 

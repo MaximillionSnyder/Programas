@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.morphdemo.data.SampleData
 import com.example.morphdemo.morph.RectMorphCard
+import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
 import com.example.morphdemo.theme.MorphDemoTheme
 
@@ -70,6 +71,44 @@ private fun Screen(auto: Boolean = false) {
 
         SectionHeader(
             number = "1",
+            name = "Dato -> grafica",
+            detail = "El dato primero; al tocar, los cuadrados se vuelven la grafica",
+        )
+        Spacer(Modifier.height(10.dp))
+        SeriesMorphCard(
+            title = "Altura",
+            trailing = SampleData.ALTITUDE_TRAILING,
+            headlineLabel = SampleData.ALTITUDE_LABEL,
+            headlineValue = SampleData.ALTITUDE_VALUE,
+            headlineUnit = SampleData.ALTITUDE_UNIT,
+            details = SampleData.ALTITUDE_DETAILS,
+            maxLabel = SampleData.ALTITUDE_MAX,
+            minLabel = SampleData.ALTITUDE_MIN,
+            series = SampleData.elevationProfile,
+            barColor = MaterialTheme.colorScheme.primary,
+            autoToggleMs = if (auto) 2000L else null,
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        SeriesMorphCard(
+            title = "Pulso en el recorrido",
+            trailing = SampleData.PULSE_TRAILING,
+            headlineLabel = SampleData.PULSE_LABEL,
+            headlineValue = SampleData.PULSE_VALUE,
+            headlineUnit = SampleData.PULSE_UNIT,
+            details = SampleData.PULSE_DETAILS,
+            maxLabel = SampleData.PULSE_MAX,
+            minLabel = SampleData.PULSE_MIN,
+            series = SampleData.heartRateProfile,
+            barColor = MaterialTheme.colorScheme.error,
+            autoToggleMs = if (auto) 2000L else null,
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        SectionHeader(
+            number = "2",
             name = "Cuadrados animados",
             detail = "Rectangulos interpolados a mano con animateFloatAsState",
         )
@@ -85,7 +124,7 @@ private fun Screen(auto: Boolean = false) {
         Spacer(Modifier.height(32.dp))
 
         SectionHeader(
-            number = "2",
+            number = "3",
             name = "SharedTransitionLayout",
             detail = "animateBounds sobre layouts reales, sin calcular geometria",
         )
