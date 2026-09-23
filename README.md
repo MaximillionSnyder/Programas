@@ -13,6 +13,7 @@ las piezas de dentro.
 | 5 | **Variante 1 — Lluvia**: el gráfico está oculto; los cubos caen y lo construyen | `morph/CubeRainCard.kt` |
 | 6 | **Variante 2 — Se deshace**: los cubos nacen del número y vuelan en arco | `morph/CubeBurstCard.kt` |
 | 7 | **Variante 3 — Se ponen de pie**: los cubos giran sobre su eje hasta aparecer | `morph/CubeFlipCard.kt` |
+| 8 | **Variante 4 — El bloque**: cae un bloque macizo y luego se resuelve en el perfil | `morph/CubeSlabCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -30,6 +31,36 @@ Toca cada card para alternarla.
 
 El requisito cambió: **el gráfico no debe verse en el estado información**. Eso obliga a
 reinventar de dónde salen los cubos, porque ya no pueden estar esperando a la vista.
+
+### Variante 4 — El bloque que se resuelve · `morph/CubeSlabCard.kt`
+
+**Dos fases muy marcadas:**
+
+1. **Cae un bloque macizo.** Todos los cubos bajan **juntos y a la misma altura**, formando
+   un rectángulo sólido. No hay escalonado a propósito: tiene que leerse como **una sola
+   pieza**, no como 28 barritas.
+2. **El bloque se resuelve.** Ya apoyado, cada cubo se estira o se encoge hasta su altura
+   real, escalonado de izquierda a derecha, como si el bloque se asentara.
+
+La gracia es que el espectador ve llegar *la gráfica entera* y luego la ve *tomar forma*,
+en vez de ver aparecer barritas una a una.
+
+**Verificación offline** (la del dispositivo sigue pendiente). Se replicó la matemática
+exacta. El lienzo va de `y=0` a `y=1`:
+
+```
+t=0.00  bloque y=[-0.810 .. -0.050]   oculto (por encima del lienzo)
+t=0.10  bloque y=[-0.776 .. -0.016]   oculto
+t=0.20  bloque y=[-0.672 .. +0.088]   VISIBLE (entra cayendo)
+t=0.52  bloque y=[+0.120 .. +0.880]   aterrizado en la linea base
+
+alturas distintas entre los 28 cubos:
+  t=0.45 ->  1/28   (bloque macizo, fase 1)
+  t=0.75 -> 23/28   (resolviendose, fase 2)
+  t=1.00 -> 24/28   (el perfil; tiene 24 valores distintos)
+```
+
+En t=0 el borde inferior del bloque está en **−0.050**, por encima del lienzo: no se ve.
 
 ### Variante 3 — Los cubos se ponen de pie · `morph/CubeFlipCard.kt`
 
