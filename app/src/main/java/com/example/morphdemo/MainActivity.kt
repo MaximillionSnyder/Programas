@@ -28,6 +28,7 @@ import com.example.morphdemo.morph.CubeFlipCard
 import com.example.morphdemo.morph.CubeMorphCard
 import com.example.morphdemo.morph.CubeRainCard
 import com.example.morphdemo.morph.CubeSlabCard
+import com.example.morphdemo.morph.RecorridoCard
 import com.example.morphdemo.morph.RectMorphCard
 import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
@@ -281,6 +282,20 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
                 subtitle = SampleData.SUBTITLE,
                 categories = SampleData.categories,
                 autoToggleMs = if (auto) 2000L else null,
+            )
+
+            Spacer(Modifier.height(32.dp))
+        }
+
+        if (only == 0 || only == 10) {
+            SectionHeader(
+                number = "10",
+                name = "Recorrido - la ruta se dibuja",
+                detail = "La rejilla de cubos entra en ola, se disuelve y el track se dibuja solo",
+            )
+            Spacer(Modifier.height(10.dp))
+            RecorridoCard(
+                autoReplayMs = if (auto) 3400L else null,
             )
 
             Spacer(Modifier.height(28.dp))

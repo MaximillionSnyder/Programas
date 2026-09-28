@@ -15,6 +15,7 @@ las piezas de dentro.
 | 7 | **Variante 3 — Se ponen de pie**: los cubos giran sobre su eje hasta aparecer | `morph/CubeFlipCard.kt` |
 | 8 | **Variante 4 — El bloque**: cae un bloque macizo y luego se resuelve en el perfil | `morph/CubeSlabCard.kt` |
 | 9 | **Variante 5 — Convergen**: los cubos entran por los dos bordes y se cierran desde el centro | `morph/CubeConvergeCard.kt` |
+| 10 | **Recorrido**: la rejilla de cubos entra en ola, se disuelve y sobre ella se dibuja el track | `morph/RecorridoCard.kt` |
 
 En la Card 1 los 4 segmentos de la barra de progreso **se separan y crecen** hasta ser
 4 barras, el track se adelgaza hasta ser la línea base y el panel del hero se estrecha
@@ -199,6 +200,54 @@ el cubo gira dos veces en el aire.
 - El centroide del texto `ALTURA` varía **0.05 px** en los 483 fotogramas: la card no se
   mueve.
 
+### Recorrido — el track se dibuja · `morph/RecorridoCard.kt`
+
+No es un morph entre dos estados: es una **revelación en tres capas que se solapan**.
+
+1. **La rejilla entra en ola.** 60 cubos (10x6) que cubren **toda la card** —el título se
+   dibuja encima— aparecen en orden de distancia a un foco en el borde izquierdo, a media
+   altura. El frente es una elipse: primero crece a lo alto y después barre a lo ancho,
+   que es exactamente lo que hace el video de referencia.
+2. **La rejilla se deshace** mientras el track se dibuja encima. Los cubos lejanos al
+   foco se disuelven antes; ~1 de cada 4, además, **cae de verdad** hasta el borde
+   inferior, donde queda como escombro pequeño.
+3. **El recorrido se traza** con `PathMeasure.getSegment`: el punto rosa (inicio) aparece
+   primero, la línea crece sobre los cubos y el punto menta (fin) cierra el trazo. Los
+   textos entran escalonados y el pie se escribe a máquina.
+
+La ruta **no se suaviza con curvas**: es la polilínea muestreada del video, con sus
+micro-escalones de GPX. Suavizarla con Bézier cuadráticas la convertía en una loma.
+
+```kotlin
+val segment = Path()
+measure.getSegment(0f, (measure.length * drawT).coerceAtLeast(0.001f), segment, true)
+drawPath(segment, color = RouteColor, style = Stroke(width = stroke, cap = StrokeCap.Round))
+```
+
+**Verificación contra el video de referencia.** Se replicó la matemática exacta en
+Python, se renderizaron 84 fotogramas a 30 fps y se midió la cobertura de cubos
+(píxeles no-fondo, sin textos ni ruta) en ambos. La curva coincide dentro de ±3%:
+
+```
+t(s)   render   video
+0.2    0.011    0.108
+0.3    0.068    0.164
+0.4    0.189    0.272
+0.5    0.318    0.311
+0.6    0.377    0.371
+0.7    0.436    0.444   <- pico: rejilla completa
+0.9    0.379    0.353
+1.1    0.213    0.209
+1.3    0.095    0.097
+1.5    0.033    0.053   <- solo escombros y ruta
+```
+
+**Verificación en dispositivo** sobre `docs/verificacion/recorrido_dev.mp4`: periodo
+medido de 3.40 s exactos (102 fotogramas, ciclos en f90 y f192) y los mismos puntos de
+inflexión que el video (pico en 0.7 s, mitad en 1.1 s, asentado en 1.5 s). Comparación
+fotograma a fotograma en `docs/verificacion/recorrido_cmp.png` y un ciclo completo en
+`recorrido_montage.png`.
+
 ---
 
 ## Cubos animados: la card que se despliega en ola
@@ -333,7 +382,7 @@ adb shell am force-stop com.example.morphdemo
 adb shell am start -n com.example.morphdemo/.MainActivity --ei variant 3 --ez auto true
 ```
 
-`variant` es el número de la sección (1..9); `0` o ausente muestra todas.
+`variant` es el número de la sección (1..10); `0` o ausente muestra todas.
 
 ### ¿Por qué hace falta?
 
