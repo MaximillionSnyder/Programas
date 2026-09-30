@@ -322,7 +322,7 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
             SectionHeader(
                 number = "11",
                 name = "Recorrido en voxeles",
-                detail = "Malla 15x10 que se construye en cuna y se queda; ruta curva y corta",
+                detail = "Malla 15x10 que se construye en cuna y se queda",
             )
             Spacer(Modifier.height(10.dp))
             RecorridoVoxelCard(

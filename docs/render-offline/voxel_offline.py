@@ -57,18 +57,9 @@ CAPTION_IN = konst("CAPTION_IN")
 
 BG = (0x22, 0x2D, 0x3A)
 TEXT = (0xF2, 0xF7, 0xF8)
-ROUTE = (0x5F, 0xE7, 0xD5)
-HALO = (0x46, 0xD8, 0xC6)
-START = (0xF4, 0xB3, 0xBD)
-END = (0x74, 0xEE, 0xDE)
 
 ramp = [(int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
         for h in re.findall(r"Color\(0xFF([0-9A-Fa-f]{6})\)", src.split("VoxRamp")[1])]
-
-route = {}
-for key in ("RouteStart", "RouteEnd", "RouteCtrl"):
-    m = re.search(rf"{key}\s*=\s*Offset\(\s*([0-9.]+)f,\s*([0-9.]+)f", src)
-    route[key] = (float(m.group(1)), float(m.group(2)))
 
 # --- Geometria (misma formula que buildVoxels/drawVoxels) ---------------------------------
 
@@ -134,43 +125,6 @@ def render(t):
                 o = (yy * W + xx) * 3
                 img[o:o + 3] = bytes((r, g, b))
 
-    # ruta: Bezier cuadratica muestreada, recortada con PathMeasure
-    a = (CARD[0] + cw * route["RouteStart"][0], CARD[1] + ch * route["RouteStart"][1])
-    b = (CARD[0] + cw * route["RouteEnd"][0], CARD[1] + ch * route["RouteEnd"][1])
-    c = (CARD[0] + cw * route["RouteCtrl"][0], CARD[1] + ch * route["RouteCtrl"][1])
-    pts = []
-    for i in range(49):
-        u = i / 48.0
-        v = 1.0 - u
-        pts.append((v * v * a[0] + 2 * v * u * c[0] + u * u * b[0],
-                    v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]))
-    # Longitud de arco acumulada, como hace PathMeasure.getSegment
-    seg = [0.0]
-    for i in range(1, len(pts)):
-        seg.append(seg[-1] + ((pts[i][0] - pts[i - 1][0]) ** 2
-                              + (pts[i][1] - pts[i - 1][1]) ** 2) ** 0.5)
-    total = seg[-1]
-    draw_t = range01(t, 0.62, 0.90)
-    target = total * draw_t
-    sw = max(1, int(cw * 0.009))
-    for i in range(1, len(pts)):
-        if seg[i] > target:
-            break
-        px, py = int(pts[i][0]), int(pts[i][1])
-        for d in range(-sw, sw + 1):
-            for e in range(-sw, sw + 1):
-                xx, yy = px + d, py + e
-                if 0 <= xx < W and 0 <= yy < H and d * d + e * e <= sw * sw:
-                    o = (yy * W + xx) * 3
-                    img[o:o + 3] = bytes(ROUTE)
-    sa = range01(t, 0.63, 0.67)
-    if sa > 0:
-        r0 = int(ch * 0.029)
-        for yy in range(int(a[1]) - r0, int(a[1]) + r0):
-            for xx in range(int(a[0]) - r0, int(a[0]) + r0):
-                if 0 <= xx < W and 0 <= yy < H and (xx - a[0]) ** 2 + (yy - a[1]) ** 2 <= r0 * r0:
-                    o = (yy * W + xx) * 3
-                    img[o:o + 3] = bytes(START)
     return bytes(img)
 
 
