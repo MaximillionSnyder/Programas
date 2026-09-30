@@ -1,38 +1,27 @@
 package com.example.morphdemo.morph
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -55,7 +44,7 @@ private const val VoxDurationMs = 1000
 private const val COLS = 15
 private const val ROWS = 10
 
-/** La rejilla no llena la card: arriba deja sitio al titulo, abajo casi nada. */
+/** La rejilla no llena la card: los bordes son los medidos en el video de referencia. */
 private const val GRID_L = 0.005f
 private const val GRID_T = 0.137f
 private const val GRID_W = 0.990f
@@ -76,16 +65,9 @@ private const val POP = 0.055f
 /** Probabilidad de celda de polvo (mucho mas pequena que las demas). */
 private const val DUST = 0.09f
 
-// --- Tiempos de los textos, tambien en fraccion del progreso ----------------------------
-
-private const val TITLE_IN = 0.78f
-private const val TITLE_FADE = 0.10f
-private const val CAPTION_IN = 0.90f
-
 // --- Colores muestreados del video ------------------------------------------------------
 
 private val VoxBackground = Color(0xFF222D3A)
-private val VoxText = Color(0xFFF2F7F8)
 
 /**
  * Rampa de las celdas, de oscura a clara. En el video el brillo crece de izquierda a
@@ -179,8 +161,7 @@ private fun easeOutCubic(x: Float): Float = 1f - (1f - x).pow(3)
  *  - el brillo crece de izquierda a derecha: la masa arranca casi negra y acaba en menta;
  *  - y el ciclo dura ~1 s en vez de 2.4 s.
  *
- * Los textos no se recomponen: su opacidad se lee en la fase de dibujo con
- * [graphicsLayer], y solo el pie mecanografiado recompone, y solo mientras se escribe.
+ * La card es solo la animacion: sin textos, sin numeros y sin ruta.
  *
  * Se dispara sola al aparecer; al tocar la card se vuelve a reproducir.
  *
@@ -189,9 +170,6 @@ private fun easeOutCubic(x: Float): Float = 1f - (1f - x).pow(3)
 @Composable
 fun RecorridoVoxelCard(
     modifier: Modifier = Modifier,
-    title: String = "RECORRIDO",
-    trailing: String = "300 puntos",
-    caption: String = "Inicio y fin marcados",
     autoReplayMs: Long? = null,
 ) {
     val progress = remember { Animatable(0f) }
@@ -226,71 +204,10 @@ fun RecorridoVoxelCard(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = VoxBackground),
     ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val ch = maxHeight
-
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawVoxels(progress.value, voxels)
-            }
-
-            Text(
-                text = title,
-                modifier = Modifier
-                    .offset(x = 20.dp, y = 18.dp)
-                    .graphicsLayer { alpha = range(progress.value, TITLE_IN, TITLE_IN + TITLE_FADE) },
-                fontSize = 15.sp,
-                letterSpacing = 0.6.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = VoxText,
-                maxLines = 1,
-            )
-
-            Text(
-                text = trailing,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(end = 20.dp, top = 18.dp)
-                    .graphicsLayer { alpha = range(progress.value, TITLE_IN, TITLE_IN + TITLE_FADE) },
-                fontSize = 15.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = VoxText,
-                maxLines = 1,
-            )
-
-            TypewriterCaption(
-                progress = progress,
-                text = caption,
-                modifier = Modifier.offset(x = 20.dp, y = ch * 0.86f),
-            )
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawVoxels(progress.value, voxels)
         }
     }
-}
-
-/**
- * El pie que se escribe a maquina. Va en su propio composable a proposito: es el unico
- * sitio que necesita el progreso en composacion, y asi la recomposicion queda encerrada
- * en un texto en vez de arrastrar la card entera.
- */
-@Composable
-private fun TypewriterCaption(
-    progress: Animatable<Float, AnimationVector1D>,
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    val shown: String by remember(progress) {
-        derivedStateOf {
-            val t = range(progress.value, CAPTION_IN, 1f)
-            text.take((t * text.length).toInt().coerceIn(0, text.length))
-        }
-    }
-    Text(
-        text = shown,
-        modifier = modifier,
-        fontSize = 12.sp,
-        fontWeight = FontWeight.Medium,
-        color = VoxText,
-        maxLines = 1,
-    )
 }
 
 /**
