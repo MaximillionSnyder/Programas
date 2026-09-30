@@ -32,6 +32,7 @@ import com.example.morphdemo.morph.RecorridoCard
 import com.example.morphdemo.morph.RectMorphCard
 import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
+import com.example.morphdemo.morph.VoxelMorphCard
 import com.example.morphdemo.theme.MorphDemoTheme
 
 class MainActivity : ComponentActivity() {
@@ -74,6 +75,21 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
             text = "Mismo tamano de card en ambos estados. Toca cada card para transformarla.",
             fontSize = 12.sp,
             color = muted,
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        SectionHeader(
+            number = "3",
+            name = "Transmutacion por voxeles",
+            detail = "La pieza se rompe en cubos que vuelan y se rearman en la grafica",
+        )
+        Spacer(Modifier.height(10.dp))
+        VoxelMorphCard(
+            title = SampleData.TITLE,
+            amount = SampleData.AMOUNT,
+            subtitle = SampleData.SUBTITLE,
+            categories = SampleData.categories,
         )
 
         Spacer(Modifier.height(28.dp))
