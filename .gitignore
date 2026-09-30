@@ -5,6 +5,7 @@ app/build/
 captures/
 .externalNativeBuild/
 .cxx/
+.kotlin/
 
 # Entorno local (ruta del SDK especifica de esta maquina)
 local.properties
