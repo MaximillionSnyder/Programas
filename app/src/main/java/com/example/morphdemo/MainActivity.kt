@@ -29,6 +29,7 @@ import com.example.morphdemo.morph.CubeMorphCard
 import com.example.morphdemo.morph.CubeRainCard
 import com.example.morphdemo.morph.CubeSlabCard
 import com.example.morphdemo.morph.RecorridoCard
+import com.example.morphdemo.morph.RecorridoVoxelCard
 import com.example.morphdemo.morph.RectMorphCard
 import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
@@ -314,10 +315,23 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
                 autoReplayMs = if (auto) 3400L else null,
             )
 
-            Spacer(Modifier.height(28.dp))
-        }
+            Spacer(Modifier.height(32.dp))
         }
 
+        if (only == 0 || only == 11) {
+            SectionHeader(
+                number = "11",
+                name = "Recorrido en voxeles",
+                detail = "Malla 15x10 que se construye en cuna y se queda; ruta curva y corta",
+            )
+            Spacer(Modifier.height(10.dp))
+            RecorridoVoxelCard(
+                autoReplayMs = if (auto) 2000L else null,
+            )
+
+            Spacer(Modifier.height(28.dp))
+        }
+    }
 }
 
 @Composable
