@@ -33,12 +33,15 @@ jobs:
         with:
           gradle-version: "9.7.1"
 
-      - uses: android-actions/setup-android@v3
-
       - name: Instalar SDK de Android
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager --install "platforms;android-37" "build-tools;36.0.0"
+          SDK=/usr/local/lib/android/sdk
+          BIN=$(ls -d "$SDK"/cmdline-tools/*/bin | head -1)
+          echo "$BIN" >> "$GITHUB_PATH"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          yes | "$BIN/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$BIN/sdkmanager" --install "platforms;android-37" "build-tools;36.0.0"
 
       - name: Quitar el override de aapt2 de Termux
         run: sed -i '/aapt2FromMavenOverride/d' gradle.properties
