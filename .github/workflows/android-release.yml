@@ -33,8 +33,6 @@ jobs:
         with:
           gradle-version: "9.7.1"
 
-      - uses: android-actions/setup-android@v3
-
       - name: Instalar SDK de Android
         run: |
           SDK=/usr/local/lib/android/sdk
