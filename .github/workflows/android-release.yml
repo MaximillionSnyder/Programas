@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - "main"
+      - "redmi"
   workflow_dispatch:
     inputs:
       tag:
@@ -51,6 +54,7 @@ jobs:
         run: gradle :app:assembleDebug --console=plain
 
       - name: Adjuntar el APK al release
+        if: github.event_name != 'push' || startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
