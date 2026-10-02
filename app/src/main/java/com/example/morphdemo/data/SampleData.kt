@@ -14,6 +14,19 @@ data class Category(
     val color: Color,
 )
 
+/**
+ * Un parcial de 1 km de una carrera.
+ *
+ * @param pace ritmo del parcial, ya formateado (p. ej. "5:32").
+ * @param fraction altura relativa de la barra en la grafica (0f..1f). Mas alto = mas rapido.
+ * @param heartRate pulso medio del parcial, en ppm.
+ */
+data class RunSplit(
+    val pace: String,
+    val fraction: Float,
+    val heartRate: Int,
+)
+
 object SampleData {
     const val TITLE = "Presupuesto mensual"
     const val AMOUNT = "S/ 1,240"
@@ -56,6 +69,31 @@ object SampleData {
     const val ALTITUDE_HINT = "Toca para ver el perfil"
     const val ALTITUDE_MAX = "Max 96 m"
     const val ALTITUDE_MIN = "Min 82 m"
+
+    // --- Resumen de una carrera (caso Strava) ---------------------------------------
+
+    const val RUN_TITLE = "Carrera de la manana"
+    const val RUN_DISTANCE = "5.02"
+    const val RUN_DISTANCE_UNIT = "km"
+    const val RUN_PACE = "5:32 /km"
+    const val RUN_SPEED = "10.8 km/h"
+    const val RUN_TIME = "27:48"
+    const val RUN_AVG_HR = "152 ppm"
+    const val RUN_HINT = "Toca para ver los parciales"
+
+    /**
+     * Parciales de 1 km, en el orden en que se corrieron.
+     *
+     * `fraction` es altura relativa de la barra: mas alto = mas rapido. Por eso el km mas
+     * lento (5:49) es la barra mas baja y el mas rapido (5:16) la mas alta.
+     */
+    val runSplits = listOf(
+        RunSplit("5:41", 0.62f, 139),
+        RunSplit("5:24", 0.86f, 147),
+        RunSplit("5:30", 0.78f, 153),
+        RunSplit("5:16", 0.95f, 162),
+        RunSplit("5:49", 0.58f, 166),
+    )
 
     const val PULSE_TRAILING = "300 puntos"
     const val PULSE_LABEL = "FC media"

@@ -122,3 +122,26 @@ offline de la misma matemática sobre el mismo video da ±3% en todos los puntos
 # un ciclo a 30 fps: buscar el frame con la card vacia y contar 102
 ffmpeg -v error -i recorrido_dev.mp4 -vf "fps=30,crop=1098:863:60:692" -f rawvideo -pix_fmt rgb24 - > rec.raw
 ```
+
+## Verificación de la card "Carrera" (sección 12)
+
+**Offline** con `docs/render-offline/run_offline.py`, que lee las constantes del propio
+`RunVoxelCard.kt` y los parciales de `SampleData.kt`. Comprueba que en t=0 los 207 voxeles
+están quietos dentro de sus piezas INFO y en t=1 dentro de sus barras, con las alturas
+exactas (`fraction * RUN_BAR_MAX_H`) apoyadas en la línea base. Resultado: `OK`. Deja los
+mapas ASCII y los PNG `run_t00.00.png`, `run_t00.35.png`, `run_t00.70.png` y
+`run_t01.00.png` en `docs/render-offline/`.
+
+```bash
+python3 docs/render-offline/run_offline.py
+```
+
+**En dispositivo:** pendiente (no había teléfono conectado al cerrar el cambio). Cuando
+haya, el comando es el de siempre, con la sección 12:
+
+```bash
+adb shell am force-stop com.example.morphdemo
+adb shell am start -n com.example.morphdemo/.MainActivity --ei variant 12 --ez auto true
+adb shell screenrecord --time-limit 12 --bit-rate 8000000 /sdcard/run.mp4
+adb pull /sdcard/run.mp4 docs/verificacion/run_dev.mp4
+```

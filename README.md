@@ -270,6 +270,49 @@ inflexión que el video (pico en 0.7 s, mitad en 1.1 s, asentado en 1.5 s). Comp
 fotograma a fotograma en `docs/verificacion/recorrido_cmp.png` y un ciclo completo en
 `recorrido_montage.png`.
 
+### Sección 12 — Carrera: del resumen a los parciales (estilo Strava)
+
+`RunVoxelCard` usa la **misma técnica de voxeles** que la sección 3, pero con el caso real
+que se quiere llevar a FitLog. Mientras que la sección 3 muestra un presupuesto, esta
+muestra una carrera:
+
+- **Estado info:** el resumen de Strava —distancia grande (`5.02 km`) y chips de
+  `Ritmo 5:32 /km`, `Velocidad 10.8 km/h`, `Tiempo 27:48` y `FC media 152 ppm`.
+- **Estado gráfica:** la gráfica que Strava muestra en el análisis de una carrera
+  (*"the bar graph charts your pace over the laps"*): **barras de ritmo por km**, con la
+  línea promedio punteada y la **FC por parcial** en rojo encima.
+
+El mapeo es pieza a pieza, como en todas las técnicas: el panel del resumen es el fondo del
+área de trazado, el separador es la línea base y **cada tile de estadística se convierte en
+el parcial de su km**. En reposo los voxeles se pintan planos y sin juntas; el volumen solo
+existe durante el vuelo.
+
+**Verificación offline** (la del dispositivo queda pendiente). Se replicó la matemática
+exacta en `docs/render-offline/run_offline.py`, que **lee las constantes del propio Kotlin**
+(`RUN_BAR_*`, `RUN_STAGGER` y los rects de `RUN_INFO_RECTS`) y los parciales de
+`SampleData.kt`, para que no pueda divergir sin que nadie se entere. Sobre 327 x 200 dp:
+
+```
+INFO: 7 piezas, GRAFICA: 7 piezas, 207 voxeles
+
+parcial  ritmo   frac   barra(top,bottom)   alto
+  1      5:41    0.62   (0.451, 0.860)      0.409
+  2      5:24    0.86   (0.292, 0.860)      0.568
+  3      5:30    0.78   (0.345, 0.860)      0.515
+  4      5:16    0.95   (0.233, 0.860)      0.627
+  5      5:49    0.58   (0.477, 0.860)      0.383
+
+t=0.00  los 207 voxeles quietos dentro de sus piezas INFO (ninguno vuela)
+t=1.00  los 207 voxeles quietos dentro de sus barras; cada alto = fraction * RUN_BAR_MAX_H
+        y cada base apoya exactamente en RUN_BASELINE_Y
+OK
+```
+
+El script además imprime mapas ASCII de t=0 / 0.35 / 0.7 / 1 y escribe `run_t00.00.png`,
+`run_t00.35.png`, `run_t00.70.png` y `run_t01.00.png` en `docs/render-offline/`. En t=0 se
+leen los tiles del resumen y el separador; en t=1, las cinco barras con la línea de FC
+subiendo de 139 a 166 ppm.
+
 ---
 
 ## Cubos animados: la card que se despliega en ola

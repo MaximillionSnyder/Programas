@@ -31,6 +31,7 @@ import com.example.morphdemo.morph.CubeSlabCard
 import com.example.morphdemo.morph.RecorridoCard
 import com.example.morphdemo.morph.RecorridoVoxelCard
 import com.example.morphdemo.morph.RectMorphCard
+import com.example.morphdemo.morph.RunVoxelCard
 import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
 import com.example.morphdemo.morph.VoxelMorphCard
@@ -327,6 +328,30 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
             Spacer(Modifier.height(10.dp))
             RecorridoVoxelCard(
                 autoReplayMs = if (auto) 2000L else null,
+            )
+
+            Spacer(Modifier.height(28.dp))
+        }
+
+        if (only == 0 || only == 12) {
+            SectionHeader(
+                number = "12",
+                name = "Carrera - resumen a parciales (estilo Strava)",
+                detail = "El resumen de la carrera se transmuta en las barras de ritmo por km con la FC encima",
+            )
+            Spacer(Modifier.height(10.dp))
+            RunVoxelCard(
+                title = SampleData.RUN_TITLE,
+                distance = SampleData.RUN_DISTANCE,
+                distanceUnit = SampleData.RUN_DISTANCE_UNIT,
+                pace = SampleData.RUN_PACE,
+                speed = SampleData.RUN_SPEED,
+                time = SampleData.RUN_TIME,
+                avgHr = SampleData.RUN_AVG_HR,
+                hint = SampleData.RUN_HINT,
+                splits = SampleData.runSplits,
+                barColor = MaterialTheme.colorScheme.primary,
+                autoToggleMs = if (auto) 2600L else null,
             )
 
             Spacer(Modifier.height(28.dp))
