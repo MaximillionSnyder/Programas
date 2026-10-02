@@ -294,7 +294,11 @@ exacta en `docs/render-offline/run_offline.py`, que **lee las constantes del pro
 
 ```
 INFO: 7 piezas, GRAFICA: 7 piezas, 207 voxeles
-perillas: waveDirection=DIAGONAL_BL_TR (MainActivity), spinMode=RANDOM (MainActivity), spinTurns=1.5 rad
+
+perillas (leidas de MainActivity; con la seccion 12 se renderiza):
+  seccion 12: waveDirection=DIAGONAL_BL_TR, waveJitter=0.38, spinMode=RANDOM, spinTurns=1.5 rad
+  seccion 13: waveDirection=LEFT_TO_RIGHT, waveJitter=0.38, spinMode=RANDOM, spinTurns=1.5 rad
+  seccion 14: waveDirection=SWEEP_CENTER, waveJitter=0.0, spinMode=RANDOM, spinTurns=1.5 rad
 
 parcial  ritmo   frac   barra(top,bottom)   alto
   1      5:41    0.62   (0.451, 0.860)      0.409
@@ -314,18 +318,31 @@ El script además imprime mapas ASCII de t=0 / 0.35 / 0.7 / 1 y escribe `run_t00
 leen los tiles del resumen y el separador; en t=1, las cinco barras con la línea de FC
 subiendo de 139 a 166 ppm.
 
-**Perillas (solo código).** La sección 12 acepta tres parámetros; estos son los valores por
-defecto, escritos en la llamada de `MainActivity.kt`:
+**Perillas (solo código).** `RunVoxelCard` acepta cuatro parámetros; estos son los valores
+por defecto, escritos en la llamada de `MainActivity.kt`:
 
 | Parámetro | Valores | Default |
 | --- | --- | --- |
-| `waveDirection` | `DIAGONAL_BL_TR`, `LEFT_TO_RIGHT`, `RIGHT_TO_LEFT`, `CENTER_OUT`, `EDGES_IN`, `BOTTOM_TO_TOP`, `TOP_TO_BOTTOM` | `DIAGONAL_BL_TR` |
+| `waveDirection` | `DIAGONAL_BL_TR`, `LEFT_TO_RIGHT`, `RIGHT_TO_LEFT`, `CENTER_OUT`, `EDGES_IN`, `BOTTOM_TO_TOP`, `TOP_TO_BOTTOM`, `SWEEP_CENTER` | `DIAGONAL_BL_TR` |
+| `waveJitter` | peso del azar en el retardo (0 = orden puro) | `0.38f` |
 | `spinMode` | `RANDOM`, `CLOCKWISE`, `COUNTER_CLOCKWISE`, `ALTERNATE_COLUMN`, `NONE` | `RANDOM` |
 | `spinTurns` | ángulo máximo de giro en el pico del vuelo, en radianes | `1.5f` (~86°) |
 
 Los cubos solo giran sobre el eje vertical (yaw); con `NONE` la cara frontal no se angosta.
 El verificador offline **lee estas perillas de `MainActivity.kt`** y las imprime al correr,
 así que la verificación siempre corresponde a la configuración activa.
+
+### Secciones 13 y 14 — los dos barridos, lado a lado
+
+Para comparar sin recompilar, la carrera está tres veces con la misma data y distinta onda:
+
+- **Sección 12:** diagonal de abajo-izquierda a arriba-derecha (la base, con azar 0.38).
+- **Sección 13:** `LEFT_TO_RIGHT` — barrido horizontal puro, con azar 0.38.
+- **Sección 14:** `SWEEP_CENTER` + `waveJitter = 0` — el orden de la variante 11:
+  `0.74 · avance horizontal + 0.26 · distancia al centro vertical`, determinista. Los cubos
+  siguen volando y girando, pero se rearman como la rejilla de la v11.
+
+El verificador offline valida las **tres** configuraciones a la vez y renderiza con la 12.
 
 ---
 

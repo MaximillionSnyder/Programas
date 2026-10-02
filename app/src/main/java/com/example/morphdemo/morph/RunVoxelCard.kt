@@ -81,6 +81,9 @@ private const val RUN_BAR_STEP_X = 0.18f
 private const val RUN_BAR_W = 0.15f
 private const val RUN_BAR_MAX_H = 0.66f
 
+/** Reparto de SWEEP_CENTER, copiado de la v11: dominio el avance, secundario la altura. */
+private const val RUN_SWEEP = 0.74f
+
 /** Rojo de pulso, como el que Strava usa para la frecuencia cardiaca. */
 private val RunHrColor = Color(0xFFE5484D)
 
@@ -103,6 +106,11 @@ enum class VoxelWave {
     EDGES_IN,
     BOTTOM_TO_TOP,
     TOP_TO_BOTTOM,
+    /**
+     * Como la v11: 74% avance horizontal + 26% distancia al centro vertical de la pieza.
+     * Determinista, sin azar, si se combina con `waveJitter = 0`.
+     */
+    SWEEP_CENTER,
 }
 
 /** Sentido de giro de cada cubo mientras vuela. */
@@ -205,6 +213,7 @@ private fun buildRunPieces(
  * Toca la card para alternar entre el resumen y la grafica.
  *
  * @param waveDirection direccion en la que se rearman las barras.
+ * @param waveJitter peso del azar en el retardo (0 = orden puro, 0.38 = actual).
  * @param spinMode sentido de giro de los cubos en el aire.
  * @param spinTurns angulo maximo de giro en el pico del vuelo, en radianes (1.5 = ~86).
  * @param autoToggleMs si no es null, alterna sola cada ese intervalo (modo auto-demo).
@@ -222,6 +231,7 @@ fun RunVoxelCard(
     splits: List<RunSplit>,
     barColor: Color,
     waveDirection: VoxelWave = VoxelWave.DIAGONAL_BL_TR,
+    waveJitter: Float = 0.38f,
     spinMode: VoxelSpin = VoxelSpin.RANDOM,
     spinTurns: Float = 1.5f,
     modifier: Modifier = Modifier,
@@ -321,9 +331,21 @@ fun RunVoxelCard(
                                     1f - maxOf(abs(dstU - 0.5f), abs(dstV - 0.5f)) * 2f
                                 VoxelWave.BOTTOM_TO_TOP -> 1f - dstV
                                 VoxelWave.TOP_TO_BOTTOM -> dstV
+                                VoxelWave.SWEEP_CENTER -> {
+                                    // Distancia de la fila al centro vertical de la pieza,
+                                    // como normRow en la v11 (0 en el medio, 1 en los bordes).
+                                    val rowNorm = if (piece.rows > 1) {
+                                        abs(row - (piece.rows - 1) / 2f) /
+                                            ((piece.rows - 1) / 2f)
+                                    } else {
+                                        0f
+                                    }
+                                    RUN_SWEEP * dstU + (1f - RUN_SWEEP) * rowNorm
+                                }
                             }
 
-                            val delay = (0.62f * wave + 0.38f * seed).coerceIn(0f, 1f)
+                            val delay =
+                                ((1f - waveJitter) * wave + waveJitter * seed).coerceIn(0f, 1f)
                             val local =
                                 ((t - delay * RUN_STAGGER) / (1f - RUN_STAGGER)).coerceIn(0f, 1f)
 

@@ -363,6 +363,57 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
 
             Spacer(Modifier.height(28.dp))
         }
+
+        if (only == 0 || only == 13) {
+            SectionHeader(
+                number = "13",
+                name = "Carrera - barrido izquierda a derecha",
+                detail = "La onda barre de izquierda a derecha, con azar (LEFT_TO_RIGHT)",
+            )
+            Spacer(Modifier.height(10.dp))
+            RunVoxelCard(
+                title = SampleData.RUN_TITLE,
+                distance = SampleData.RUN_DISTANCE,
+                distanceUnit = SampleData.RUN_DISTANCE_UNIT,
+                pace = SampleData.RUN_PACE,
+                speed = SampleData.RUN_SPEED,
+                time = SampleData.RUN_TIME,
+                avgHr = SampleData.RUN_AVG_HR,
+                hint = SampleData.RUN_HINT,
+                splits = SampleData.runSplits,
+                barColor = MaterialTheme.colorScheme.primary,
+                waveDirection = VoxelWave.LEFT_TO_RIGHT,
+                autoToggleMs = if (auto) 2600L else null,
+            )
+
+            Spacer(Modifier.height(28.dp))
+        }
+
+        if (only == 0 || only == 14) {
+            SectionHeader(
+                number = "14",
+                name = "Carrera - rearme estilo v11",
+                detail = "74% columna + 26% centro vertical, sin azar (SWEEP_CENTER)",
+            )
+            Spacer(Modifier.height(10.dp))
+            RunVoxelCard(
+                title = SampleData.RUN_TITLE,
+                distance = SampleData.RUN_DISTANCE,
+                distanceUnit = SampleData.RUN_DISTANCE_UNIT,
+                pace = SampleData.RUN_PACE,
+                speed = SampleData.RUN_SPEED,
+                time = SampleData.RUN_TIME,
+                avgHr = SampleData.RUN_AVG_HR,
+                hint = SampleData.RUN_HINT,
+                splits = SampleData.runSplits,
+                barColor = MaterialTheme.colorScheme.primary,
+                waveDirection = VoxelWave.SWEEP_CENTER,
+                waveJitter = 0f,
+                autoToggleMs = if (auto) 2600L else null,
+            )
+
+            Spacer(Modifier.height(28.dp))
+        }
     }
 }
 

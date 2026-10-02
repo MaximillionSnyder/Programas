@@ -34,22 +34,48 @@ data_src = DATA.read_text(encoding="utf-8")
 main_src = MAIN.read_text(encoding="utf-8")
 
 
-def config(name, enum_hint):
-    """Lee el valor de una perilla en la llamada de MainActivity; si no, el default."""
-    call = re.search(rf"{name}\s*=\s*{enum_hint}\.(\w+)", main_src)
-    default = re.search(rf"{name}:\s*{enum_hint}\s*=\s*{enum_hint}\.(\w+)", src)
-    got = call or default
-    if not got:
-        sys.exit(f"no encuentro la perilla {name}")
-    return got.group(1), "MainActivity" if call else "default del composable"
+def default_enum(name, enum_hint):
+    """El default de una perilla en la firma del composable."""
+    m = re.search(rf"{name}:\s*{enum_hint}\s*=\s*{enum_hint}\.(\w+)", src)
+    if not m:
+        sys.exit(f"no encuentro el default de {name}")
+    return m.group(1)
 
 
-WAVE, WAVE_SRC = config("waveDirection", "VoxelWave")
-SPIN, SPIN_SRC = config("spinMode", "VoxelSpin")
-m_turns = re.search(r"spinTurns\s*=\s*([0-9.]+)f", main_src) or re.search(
-    r"spinTurns:\s*Float\s*=\s*([0-9.]+)f", src
-)
-SPIN_TURNS = float(m_turns.group(1)) if m_turns else 1.5
+def default_num(name):
+    m = re.search(rf"{name}:\s*Float\s*=\s*([0-9.]+)f", src)
+    if not m:
+        sys.exit(f"no encuentro el default de {name}")
+    return float(m.group(1))
+
+
+def parse_call(block):
+    """Perillas de una llamada a RunVoxelCard; lo ausente cae al default del composable."""
+
+    def enum(name, hint):
+        m = re.search(rf"{name}\s*=\s*{hint}\.(\w+)", block)
+        return m.group(1) if m else default_enum(name, hint)
+
+    def num(name):
+        m = re.search(rf"{name}\s*=\s*([0-9.]+)f", block)
+        return float(m.group(1)) if m else default_num(name)
+
+    return {
+        "wave": enum("waveDirection", "VoxelWave"),
+        "jitter": num("waveJitter"),
+        "spin": enum("spinMode", "VoxelSpin"),
+        "turns": num("spinTurns"),
+    }
+
+
+# Cada llamada a RunVoxelCard en MainActivity, en orden: secciones 12, 13, 14...
+CALLS = re.findall(r"RunVoxelCard\((.*?)\n\s*\)", main_src, re.S)
+CONFIGS = [parse_call(c) for c in CALLS] or [parse_call("")]
+
+WAVE = CONFIGS[0]["wave"]
+JITTER = CONFIGS[0]["jitter"]
+SPIN = CONFIGS[0]["spin"]
+SPIN_TURNS = CONFIGS[0]["turns"]
 
 
 def konst(name, cast=float):
@@ -67,6 +93,7 @@ BAR_X0 = konst("RUN_BAR_X0")
 BAR_STEP_X = konst("RUN_BAR_STEP_X")
 BAR_W = konst("RUN_BAR_W")
 BAR_MAX_H = konst("RUN_BAR_MAX_H")
+SWEEP = konst("RUN_SWEEP")
 
 
 def info_rects():
@@ -144,8 +171,8 @@ def lerp(a, b, t):
     return a + (b - a) * t
 
 
-def wave_for(name, u, v):
-    """Replica de las siete direcciones de VoxelWave."""
+def wave_for(name, u, v, row, rows):
+    """Replica de las ocho direcciones de VoxelWave."""
     if name == "DIAGONAL_BL_TR":
         return (u + (1.0 - v)) * 0.5
     if name == "LEFT_TO_RIGHT":
@@ -160,6 +187,11 @@ def wave_for(name, u, v):
         return 1.0 - v
     if name == "TOP_TO_BOTTOM":
         return v
+    if name == "SWEEP_CENTER":
+        row_norm = (
+            abs(row - (rows - 1) / 2.0) / ((rows - 1) / 2.0) if rows > 1 else 0.0
+        )
+        return SWEEP * u + (1.0 - SWEEP) * row_norm
     sys.exit(f"direccion de onda desconocida: {name}")
 
 
@@ -177,8 +209,8 @@ def voxels_at(t):
                 seed = hash01(p_index * 977 + col * 131 + row * 17)
                 dst_u = to_r[0] + ((col + 0.5) / cols) * to_r[2]
                 dst_v = to_r[1] + ((row + 0.5) / rows) * to_r[3]
-                wave = wave_for(WAVE, dst_u, dst_v)
-                delay = min(1.0, max(0.0, 0.62 * wave + 0.38 * seed))
+                wave = wave_for(WAVE, dst_u, dst_v, row, rows)
+                delay = min(1.0, max(0.0, (1.0 - JITTER) * wave + JITTER * seed))
                 local = min(1.0, max(0.0, (t - delay * STAGGER) / (1.0 - STAGGER)))
                 flight = max(0.0, math.sin(local * math.pi))
                 jitter = hash01(p_index * 31 + col * 7 + row * 3) - 0.5
@@ -253,16 +285,17 @@ def check():
                 print("FALLA: un voxel se sale de su pieza GRAFICA en t=1")
                 ok = False
 
-    # 4. La direccion de onda configurada da retardos dentro de 0..1 en todo el destino.
-    for _, to_r, cols, rows in PIECES:
-        for col in range(cols):
-            for row in range(rows):
-                u = to_r[0] + ((col + 0.5) / cols) * to_r[2]
-                v = to_r[1] + ((row + 0.5) / rows) * to_r[3]
-                w = wave_for(WAVE, u, v)
-                if not 0.0 <= w <= 1.0:
-                    print(f"FALLA: wave {WAVE} fuera de 0..1 ({w:.3f})")
-                    ok = False
+    # 4. Cada direccion de onda configurada da retardos dentro de 0..1 en todo el destino.
+    for cfg in CONFIGS:
+        for _, to_r, cols, rows in PIECES:
+            for col in range(cols):
+                for row in range(rows):
+                    u = to_r[0] + ((col + 0.5) / cols) * to_r[2]
+                    v = to_r[1] + ((row + 0.5) / rows) * to_r[3]
+                    w = wave_for(cfg["wave"], u, v, row, rows)
+                    if not 0.0 <= w <= 1.0:
+                        print(f"FALLA: wave {cfg['wave']} fuera de 0..1 ({w:.3f})")
+                        ok = False
 
     print(f"\nvoxeles: {total_voxels()} en {len(PIECES)} piezas")
     print("OK" if ok else "HAY FALLAS")
@@ -367,8 +400,13 @@ def render_png(t, path):
 if __name__ == "__main__":
     print(f"INFO: {len(INFO)} piezas, GRÁFICA: {len(PIECES)} piezas, "
           f"{total_voxels()} voxeles\n")
-    print(f"perillas: waveDirection={WAVE} ({WAVE_SRC}), "
-          f"spinMode={SPIN} ({SPIN_SRC}), spinTurns={SPIN_TURNS} rad\n")
+    print(f"perillas (leidas de MainActivity; con la seccion 12 se renderiza):")
+    for i, cfg in enumerate(CONFIGS):
+        print(
+            f"  seccion {12 + i}: waveDirection={cfg['wave']}, waveJitter={cfg['jitter']}, "
+            f"spinMode={cfg['spin']}, spinTurns={cfg['turns']} rad"
+        )
+    print()
     status = check()
     frames = [float(x) for x in sys.argv[1:]] or [0.0, 0.35, 0.7, 1.0]
     sheet = []
