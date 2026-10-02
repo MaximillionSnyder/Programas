@@ -294,6 +294,7 @@ exacta en `docs/render-offline/run_offline.py`, que **lee las constantes del pro
 
 ```
 INFO: 7 piezas, GRAFICA: 7 piezas, 207 voxeles
+perillas: waveDirection=DIAGONAL_BL_TR (MainActivity), spinMode=RANDOM (MainActivity), spinTurns=1.5 rad
 
 parcial  ritmo   frac   barra(top,bottom)   alto
   1      5:41    0.62   (0.451, 0.860)      0.409
@@ -312,6 +313,19 @@ El script además imprime mapas ASCII de t=0 / 0.35 / 0.7 / 1 y escribe `run_t00
 `run_t00.35.png`, `run_t00.70.png` y `run_t01.00.png` en `docs/render-offline/`. En t=0 se
 leen los tiles del resumen y el separador; en t=1, las cinco barras con la línea de FC
 subiendo de 139 a 166 ppm.
+
+**Perillas (solo código).** La sección 12 acepta tres parámetros; estos son los valores por
+defecto, escritos en la llamada de `MainActivity.kt`:
+
+| Parámetro | Valores | Default |
+| --- | --- | --- |
+| `waveDirection` | `DIAGONAL_BL_TR`, `LEFT_TO_RIGHT`, `RIGHT_TO_LEFT`, `CENTER_OUT`, `EDGES_IN`, `BOTTOM_TO_TOP`, `TOP_TO_BOTTOM` | `DIAGONAL_BL_TR` |
+| `spinMode` | `RANDOM`, `CLOCKWISE`, `COUNTER_CLOCKWISE`, `ALTERNATE_COLUMN`, `NONE` | `RANDOM` |
+| `spinTurns` | ángulo máximo de giro en el pico del vuelo, en radianes | `1.5f` (~86°) |
+
+Los cubos solo giran sobre el eje vertical (yaw); con `NONE` la cara frontal no se angosta.
+El verificador offline **lee estas perillas de `MainActivity.kt`** y las imprime al correr,
+así que la verificación siempre corresponde a la configuración activa.
 
 ---
 

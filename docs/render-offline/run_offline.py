@@ -23,6 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 KT = HERE.parent.parent / "app/src/main/java/com/example/morphdemo/morph/RunVoxelCard.kt"
 DATA = HERE.parent.parent / "app/src/main/java/com/example/morphdemo/data/SampleData.kt"
+MAIN = HERE.parent.parent / "app/src/main/java/com/example/morphdemo/MainActivity.kt"
 
 # El contenido de la card en el dispositivo de referencia: 327 x 200 dp.
 CONTENT_W_DP = 327.0
@@ -30,6 +31,25 @@ CONTENT_H_DP = 200.0
 
 src = KT.read_text(encoding="utf-8")
 data_src = DATA.read_text(encoding="utf-8")
+main_src = MAIN.read_text(encoding="utf-8")
+
+
+def config(name, enum_hint):
+    """Lee el valor de una perilla en la llamada de MainActivity; si no, el default."""
+    call = re.search(rf"{name}\s*=\s*{enum_hint}\.(\w+)", main_src)
+    default = re.search(rf"{name}:\s*{enum_hint}\s*=\s*{enum_hint}\.(\w+)", src)
+    got = call or default
+    if not got:
+        sys.exit(f"no encuentro la perilla {name}")
+    return got.group(1), "MainActivity" if call else "default del composable"
+
+
+WAVE, WAVE_SRC = config("waveDirection", "VoxelWave")
+SPIN, SPIN_SRC = config("spinMode", "VoxelSpin")
+m_turns = re.search(r"spinTurns\s*=\s*([0-9.]+)f", main_src) or re.search(
+    r"spinTurns:\s*Float\s*=\s*([0-9.]+)f", src
+)
+SPIN_TURNS = float(m_turns.group(1)) if m_turns else 1.5
 
 
 def konst(name, cast=float):
@@ -124,6 +144,25 @@ def lerp(a, b, t):
     return a + (b - a) * t
 
 
+def wave_for(name, u, v):
+    """Replica de las siete direcciones de VoxelWave."""
+    if name == "DIAGONAL_BL_TR":
+        return (u + (1.0 - v)) * 0.5
+    if name == "LEFT_TO_RIGHT":
+        return u
+    if name == "RIGHT_TO_LEFT":
+        return 1.0 - u
+    if name == "CENTER_OUT":
+        return max(abs(u - 0.5), abs(v - 0.5)) * 2.0
+    if name == "EDGES_IN":
+        return 1.0 - max(abs(u - 0.5), abs(v - 0.5)) * 2.0
+    if name == "BOTTOM_TO_TOP":
+        return 1.0 - v
+    if name == "TOP_TO_BOTTOM":
+        return v
+    sys.exit(f"direccion de onda desconocida: {name}")
+
+
 def voxels_at(t):
     """Devuelve, por pieza, cada voxel con su centro y tamano interpolados (en dp)."""
     out = []
@@ -138,7 +177,7 @@ def voxels_at(t):
                 seed = hash01(p_index * 977 + col * 131 + row * 17)
                 dst_u = to_r[0] + ((col + 0.5) / cols) * to_r[2]
                 dst_v = to_r[1] + ((row + 0.5) / rows) * to_r[3]
-                wave = (dst_u + (1.0 - dst_v)) * 0.5
+                wave = wave_for(WAVE, dst_u, dst_v)
                 delay = min(1.0, max(0.0, 0.62 * wave + 0.38 * seed))
                 local = min(1.0, max(0.0, (t - delay * STAGGER) / (1.0 - STAGGER)))
                 flight = max(0.0, math.sin(local * math.pi))
@@ -213,6 +252,17 @@ def check():
             ):
                 print("FALLA: un voxel se sale de su pieza GRAFICA en t=1")
                 ok = False
+
+    # 4. La direccion de onda configurada da retardos dentro de 0..1 en todo el destino.
+    for _, to_r, cols, rows in PIECES:
+        for col in range(cols):
+            for row in range(rows):
+                u = to_r[0] + ((col + 0.5) / cols) * to_r[2]
+                v = to_r[1] + ((row + 0.5) / rows) * to_r[3]
+                w = wave_for(WAVE, u, v)
+                if not 0.0 <= w <= 1.0:
+                    print(f"FALLA: wave {WAVE} fuera de 0..1 ({w:.3f})")
+                    ok = False
 
     print(f"\nvoxeles: {total_voxels()} en {len(PIECES)} piezas")
     print("OK" if ok else "HAY FALLAS")
@@ -317,6 +367,8 @@ def render_png(t, path):
 if __name__ == "__main__":
     print(f"INFO: {len(INFO)} piezas, GRÁFICA: {len(PIECES)} piezas, "
           f"{total_voxels()} voxeles\n")
+    print(f"perillas: waveDirection={WAVE} ({WAVE_SRC}), "
+          f"spinMode={SPIN} ({SPIN_SRC}), spinTurns={SPIN_TURNS} rad\n")
     status = check()
     frames = [float(x) for x in sys.argv[1:]] or [0.0, 0.35, 0.7, 1.0]
     sheet = []

@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.morphdemo"
         minSdk = 26
         targetSdk = 37
-        versionCode = 4
-        versionName = "1.10-carrera"
+        versionCode = 5
+        versionName = "1.11-giro"
     }
 
     buildTypes {

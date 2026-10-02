@@ -35,6 +35,8 @@ import com.example.morphdemo.morph.RunVoxelCard
 import com.example.morphdemo.morph.SeriesMorphCard
 import com.example.morphdemo.morph.SharedMorphCard
 import com.example.morphdemo.morph.VoxelMorphCard
+import com.example.morphdemo.morph.VoxelSpin
+import com.example.morphdemo.morph.VoxelWave
 import com.example.morphdemo.theme.MorphDemoTheme
 
 class MainActivity : ComponentActivity() {
@@ -351,6 +353,11 @@ private fun Screen(auto: Boolean = false, only: Int = 0) {
                 hint = SampleData.RUN_HINT,
                 splits = SampleData.runSplits,
                 barColor = MaterialTheme.colorScheme.primary,
+                // Perillas de la seccion 12 (ver README): direccion de la ola, sentido y
+                // angulo maximo del giro de los cubos. Estos son los valores por defecto.
+                waveDirection = VoxelWave.DIAGONAL_BL_TR,
+                spinMode = VoxelSpin.RANDOM,
+                spinTurns = 1.5f,
                 autoToggleMs = if (auto) 2600L else null,
             )
 

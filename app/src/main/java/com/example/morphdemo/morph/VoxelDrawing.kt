@@ -66,6 +66,9 @@ internal fun hash01(n: Int): Float {
  * (con medio pixel de mas para que no aparezcan lineas de costura entre voxeles vecinos).
  * Si esta volando se dibuja como cubo: cara frontal + tapa + costado, con el ancho de la
  * cara frontal encogido por el coseno del giro, que es lo que da la sensacion de volumen.
+ *
+ * @param spin sentido del giro (-1..1); 0 = sin giro (cara frontal completa).
+ * @param spinRad angulo maximo de giro en el pico del vuelo, en radianes.
  */
 internal fun DrawScope.drawVoxel(
     cx: Float,
@@ -78,6 +81,7 @@ internal fun DrawScope.drawVoxel(
     lift: Float,
     spin: Float,
     scale: Float,
+    spinRad: Float = 1.5f,
 ) {
     if (flight < 0.02f) {
         drawRect(
@@ -90,7 +94,7 @@ internal fun DrawScope.drawVoxel(
 
     // El giro alrededor del eje Y se aproxima encogiendo la cara frontal por |cos| y
     // dibujando el costado con el ancho que asoma: |sin|.
-    val angle = spin * flight * 1.5f
+    val angle = spin * flight * spinRad
     val cosA = abs(cos(angle))
     val sinA = abs(sin(angle))
 

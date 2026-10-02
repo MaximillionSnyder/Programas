@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.example.morphdemo.data.RunSplit
 import kotlinx.coroutines.delay
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -84,6 +85,37 @@ private const val RUN_BAR_MAX_H = 0.66f
 private val RunHrColor = Color(0xFFE5484D)
 
 private val RunPi = PI.toFloat()
+
+/**
+ * Direccion en la que se rearma la grafica: define el retardo de cada voxel.
+ *
+ * La onda se calcula sobre el layout de DESTINO (las barras), asi que "izquierda" es el
+ * km 1 y "arriba" es la punta de las barras.
+ */
+enum class VoxelWave {
+    /** De abajo-izquierda a arriba-derecha (por defecto). */
+    DIAGONAL_BL_TR,
+    LEFT_TO_RIGHT,
+    RIGHT_TO_LEFT,
+    /** Los del centro llegan primero: la grafica se abre hacia los bordes. */
+    CENTER_OUT,
+    /** Los bordes llegan primero: la grafica se cierra hacia el centro. */
+    EDGES_IN,
+    BOTTOM_TO_TOP,
+    TOP_TO_BOTTOM,
+}
+
+/** Sentido de giro de cada cubo mientras vuela. */
+enum class VoxelSpin {
+    /** Aleatorio determinista por voxel (por defecto). */
+    RANDOM,
+    CLOCKWISE,
+    COUNTER_CLOCKWISE,
+    /** Alterna columna a columna dentro de cada pieza. */
+    ALTERNATE_COLUMN,
+    /** Sin giro: la cara frontal no se angosta. */
+    NONE,
+}
 
 /**
  * Geometria del estado INFO, en orden: panel, separador y los cinco tiles (distancia,
@@ -172,6 +204,9 @@ private fun buildRunPieces(
  *
  * Toca la card para alternar entre el resumen y la grafica.
  *
+ * @param waveDirection direccion en la que se rearman las barras.
+ * @param spinMode sentido de giro de los cubos en el aire.
+ * @param spinTurns angulo maximo de giro en el pico del vuelo, en radianes (1.5 = ~86).
  * @param autoToggleMs si no es null, alterna sola cada ese intervalo (modo auto-demo).
  */
 @Composable
@@ -186,6 +221,9 @@ fun RunVoxelCard(
     hint: String,
     splits: List<RunSplit>,
     barColor: Color,
+    waveDirection: VoxelWave = VoxelWave.DIAGONAL_BL_TR,
+    spinMode: VoxelSpin = VoxelSpin.RANDOM,
+    spinTurns: Float = 1.5f,
     modifier: Modifier = Modifier,
     autoToggleMs: Long? = null,
 ) {
@@ -261,13 +299,29 @@ fun RunVoxelCard(
                     for (col in 0 until piece.cols) {
                         for (row in 0 until piece.rows) {
                             val seed = hash01(pieceIndex * 977 + col * 131 + row * 17)
-                            val spin = seed * 2f - 1f
+                            val spin = when (spinMode) {
+                                VoxelSpin.RANDOM -> seed * 2f - 1f
+                                VoxelSpin.CLOCKWISE -> 1f
+                                VoxelSpin.COUNTER_CLOCKWISE -> -1f
+                                VoxelSpin.ALTERNATE_COLUMN -> if (col % 2 == 0) 1f else -1f
+                                VoxelSpin.NONE -> 0f
+                            }
 
-                            // Onda diagonal sobre el layout de DESTINO: los parciales se
-                            // rearman en barrido, no todos a la vez.
+                            // Onda sobre el layout de DESTINO: los parciales se rearman en
+                            // barrido, no todos a la vez.
                             val dstU = piece.to.x + ((col + 0.5f) / piece.cols) * piece.to.w
                             val dstV = piece.to.y + ((row + 0.5f) / piece.rows) * piece.to.h
-                            val wave = (dstU + (1f - dstV)) * 0.5f
+                            val wave = when (waveDirection) {
+                                VoxelWave.DIAGONAL_BL_TR -> (dstU + (1f - dstV)) * 0.5f
+                                VoxelWave.LEFT_TO_RIGHT -> dstU
+                                VoxelWave.RIGHT_TO_LEFT -> 1f - dstU
+                                VoxelWave.CENTER_OUT ->
+                                    maxOf(abs(dstU - 0.5f), abs(dstV - 0.5f)) * 2f
+                                VoxelWave.EDGES_IN ->
+                                    1f - maxOf(abs(dstU - 0.5f), abs(dstV - 0.5f)) * 2f
+                                VoxelWave.BOTTOM_TO_TOP -> 1f - dstV
+                                VoxelWave.TOP_TO_BOTTOM -> dstV
+                            }
 
                             val delay = (0.62f * wave + 0.38f * seed).coerceIn(0f, 1f)
                             val local =
@@ -295,6 +349,7 @@ fun RunVoxelCard(
                                 lift = liftMax * flight * (0.55f + 0.45f * seed),
                                 spin = spin,
                                 scale = 1f + 0.22f * flight,
+                                spinRad = spinTurns,
                             )
                         }
                     }
