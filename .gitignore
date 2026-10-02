@@ -21,3 +21,6 @@ local.properties
 # Claves
 *.keystore
 *.jks
+
+# CodeGraph
+.codegraph/
