@@ -29,6 +29,28 @@ Toca cada card para alternarla.
 
 ---
 
+## Cómo se trabaja en este repo
+
+Hay dos personas trabajando en el código. Para evitar que el trabajo se quede parado en una
+rama, las reglas son:
+
+- **`main` es la única rama de integración.** Lo que está en `main` es lo publicable y lo
+  que compila la CI.
+- **No se abren ramas por persona ni por dispositivo.** Antes existió una `redmi`, y eso
+  costó los releases `v1.9.0` y `v1.9.1`, que colgaban de esa rama mientras `main` se
+  quedaba en `v1.8.0`. El motivo técnico de que no haga falta: el código **no tiene nada
+  específico del dispositivo**. No lee `LocalConfiguration`, ni `Build.MODEL`, ni densidad;
+  no hay rutas por `sdkInt` (`minSdk=26`, `targetSdk=37`) y todos los tamaños son `dp` o
+  fracciones del lienzo. Se verificó en un POCO X6 Pro 5G y compila igual en el CI.
+- **Las ramas son cortas y se nombran por el trabajo**: `feat/voxel-transmutation`,
+  `variant-11-solo-malla`. Se abre desde `main` actualizado, se integra con PR, y se
+  borra al terminar.
+- **Para ponerse al día**: `git fetch && git switch main && git pull --rebase`.
+
+Los releases se cortan con tags `v*` sobre `main`; la CI compila y adjunta el APK.
+
+---
+
 ## Variantes: el gráfico oculto
 
 El requisito cambió: **el gráfico no debe verse en el estado información**. Eso obliga a

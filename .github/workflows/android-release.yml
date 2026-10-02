@@ -5,8 +5,7 @@ on:
     tags:
       - "v*"
     branches:
-      - "main"
-      - "redmi"
+      - "**"
   workflow_dispatch:
     inputs:
       tag:
@@ -46,9 +45,6 @@ jobs:
           yes | "$BIN/sdkmanager" --licenses > /dev/null 2>&1 || true
           "$BIN/sdkmanager" --install "platforms;android-37.0" "build-tools;36.0.0" \
             || "$BIN/sdkmanager" --install "platforms;android-37" "build-tools;36.0.0"
-
-      - name: Quitar el override de aapt2 de Termux
-        run: sed -i '/aapt2FromMavenOverride/d' gradle.properties
 
       - name: Compilar APK debug
         run: gradle :app:assembleDebug --console=plain
